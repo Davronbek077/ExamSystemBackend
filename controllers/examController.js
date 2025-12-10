@@ -1,56 +1,121 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const path = require("path");
-const cors = require("cors");
+const Exam = require("../models/exam");
+const Result = require("../models/result");
 
-dotenv.config();
+// ===============================
+//      CREATE EXAM
+// ===============================
+exports.createExam = async (req, res) => {
+  try {
+    const { title, timeLimit, passPercentage, questions, listeningTF, listeningGaps } = req.body;
+    const listeningAudio = req.file ? req.file.path : null;
 
-const app = express();
+    const exam = await Exam.create({
+      title,
+      timeLimit,
+      passPercentage,
+      questions,
+      listeningTF,
+      listeningGaps,
+      listeningAudio
+    });
 
-// === CORS FIX — MUHIM!!! ===
-app.use(cors({
-  origin: "*", 
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+    res.status(201).json({ success: true, exam });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-// Server JSON qabul qilish
-app.use(express.json());
 
-// ==== ENV CHECK ====
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URL;
+// ===============================
+//      GET ALL EXAMS
+// ===============================
+exports.getAllExams = async (req, res) => {
+  try {
+    const exams = await Exam.find().sort({ createdAt: -1 });
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-if (!MONGO_URI) {
-  console.error("❌ MONGO_URI is not defined in .env");
-  process.exit(1);
-}
 
-if (!process.env.JWT_SECRET) {
-  console.error("❌ JWT_SECRET is not defined in .env");
-  process.exit(1);
-}
+// ===============================
+//      GET ONE EXAM
+// ===============================
+exports.getExamById = async (req, res) => {
+  try {
+    const exam = await Exam.findById(req.params.id);
 
-// ==== ROUTES ====
-app.use("/auth", require("./routes/authRoutes"));
-app.use("/exams", require("./routes/examRoutes"));
-app.use("/results", require("./routes/resultRoutes"));
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
 
-// Listening Audio static files
-app.use(
-  "/uploads/listening",
-  express.static(path.join(__dirname, "uploads/listening"))
-);
+    res.json(exam);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-// ==== MONGO CONNECT ====
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => {
-    console.error("❌ MongoDB Connection Error:", err.message);
-    process.exit(1);
-  });
 
-// ==== SERVER RUN ====
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// ===============================
+//      SUBMIT EXAM
+// ===============================
+exports.submitExam = async (req, res) => {
+  try {
+    const { examId, answers } = req.body;
+    const studentId = req.user._id;
+
+    const exam = await Exam.findById(examId);
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    let score = 0;
+
+    // Basic questions
+    exam.questions.forEach((q) => {
+      const ans = answers.find(a => a.qid === q._id.toString());
+      if (!ans) return;
+
+      if (ans.answer.toLowerCase() === q.correctAnswer.toLowerCase()) {
+        score += q.points;
+      }
+    });
+
+    // True/False
+    exam.listeningTF.forEach((item, i) => {
+      const ans = answers.find(a => a.qid === "ltf" + i);
+      if (!ans) return;
+
+      if (String(item.correct) === String(ans.answer)) score += 1;
+    });
+
+    // Gap fills
+    exam.listeningGaps.forEach((item, i) => {
+      const ans = answers.find(a => a.qid === "lgap" + i);
+      if (!ans) return;
+
+      if (item.correctWord.trim().toLowerCase() === ans.answer.trim().toLowerCase()) {
+        score += 1;
+      }
+    });
+
+    const total =
+      exam.questions.length +
+      exam.listeningTF.length +
+      exam.listeningGaps.length;
+
+    const percentage = Math.round((score / total) * 100);
+    const passed = percentage >= (exam.passPercentage || 50);
+
+    const result = await Result.create({
+      examId,
+      studentId,
+      answers,
+      score,
+      percentage,
+      passed,
+      submittedAt: new Date(),
+    });
+
+    res.status(200).json({ message: "Exam submitted", result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
