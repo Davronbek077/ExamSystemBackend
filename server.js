@@ -10,7 +10,7 @@ const app = express();
 
 // === CORS FIX — MUHIM!!! ===
 app.use(cors({
-  origin: ["http://localhost:5173", "https://examsystem.vercel.app"], 
+  origin: "*", 
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
