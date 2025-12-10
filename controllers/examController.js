@@ -1,4 +1,5 @@
 const Exam = require("../models/exam");
+import Result from "../models/result";
 
 exports.createExam = async (req, res) => {
   try {
@@ -77,6 +78,30 @@ exports.submitExam = async (req, res) => {
 
     res.status(200).json({ message: "Exam submitted", result });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getAllExams = async (req, res) => {
+  try {
+    const exams = await Exam.find().sort({ createdAt: -1 });
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================================
+//   get exam by id
+// ================================
+exports.getExamById = async (req, res) => {
+  try {
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    res.json(exam);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
