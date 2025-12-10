@@ -1,7 +1,17 @@
 const mongoose = require("mongoose");
 
+const listeningTFSchema = new mongoose.Schema({
+  statement: String,
+  correct: Boolean
+});
+
+const listeningGapSchema = new mongoose.Schema({
+  sentence: String,
+  correctWord: String
+});
+
 const questionSchema = new mongoose.Schema({
-  type: { type: String, enum: ["mcq", "truefalse", "gapfill", "grammar", "listening"], required: true },
+  type: { type: String, enum: ["mcq", "truefalse", "gapfill", "grammar"] },
   questionText: String,
   options: [String],
   correctAnswer: String,
@@ -10,11 +20,15 @@ const questionSchema = new mongoose.Schema({
 
 const examSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  timeLimit: { type: Number, required: true },
-  passPercentage: { type: Number, default: 50 },
-  questions: [questionSchema],
-  listeningAudio: String
+  timeLimit: Number,
+  passPercentage: Number,
+
+  listeningAudio: String,
+
+  listeningTF: [listeningTFSchema],
+  listeningGaps: [listeningGapSchema],
+
+  questions: [questionSchema]
 }, { timestamps: true });
 
-// model name must match refs used elsewhere ("Exam")
 module.exports = mongoose.model("Exam", examSchema);
