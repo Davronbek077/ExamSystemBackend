@@ -35,8 +35,7 @@ exports.createExam = async (req, res) => {
 
     res.status(201).json({ success: true, exam });
   } catch (err) {
-    console.error("❌ CREATE EXAM ERROR:", err);   // <-- MUHIM
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
