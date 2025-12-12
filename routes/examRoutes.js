@@ -1,28 +1,52 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { createExam, getAllExams, getExamById, submitExam } = require("../controllers/examController");
+const fs = require("fs");
+const path = require("path");
 
-// Multer upload config
+const {
+  createExam,
+  getAllExams,
+  getExamById,
+  submitExam
+} = require("../controllers/examController");
+
+
+// LISTENING papkasini avtomatik yaratish
+const uploadPath = path.join(__dirname, "..", "uploads/listening");
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+  console.log("📁 listening papkasi yaratildi");
+}
+
+
+// Multer config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/listening/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-listening" + path.extname(file.originalname));
+  },
 });
+
 const upload = multer({ storage });
 
+
 // =============================
-//       CREATE EXAM (PUBLIC)
+// CREATE EXAM
 // =============================
 router.post("/create", upload.single("audio"), createExam);
 
 // =============================
-//       GET EXAMS (PUBLIC)
+// GET EXAMS
 // =============================
-router.get("/all", getAllExams);      // <-- frontend aynan shuni chaqiryapti
+router.get("/all", getAllExams);
 router.get("/:id", getExamById);
 
 // =============================
-//       SUBMIT EXAM (PUBLIC)
+// SUBMIT EXAM
 // =============================
 router.post("/submit", submitExam);
 
