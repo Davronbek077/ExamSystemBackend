@@ -7,37 +7,54 @@ const Result = require("../models/result");
 // ===============================
 exports.createExam = async (req, res) => {
   try {
+    console.log("📩 BODY:", req.body);
+    console.log("🎧 FILE:", req.file);
+
     let {
       title,
       timeLimit,
       passPercentage,
       questions,
       listeningTF,
-      listeningGaps
+      listeningGaps,
+      grammarQuestions,
+      tenseQuestions
     } = req.body;
 
     const listeningAudio = req.file ? req.file.path : null;
 
-    // JSON stringlarni massivga aylantiramiz
-    if (questions) questions = JSON.parse(questions);
-    if (listeningTF) listeningTF = JSON.parse(listeningTF);
-    if (listeningGaps) listeningGaps = JSON.parse(listeningGaps);
+    // JSON parse qilamiz (xatoni tutish uchun try-catch)
+    try {
+      if (questions) questions = JSON.parse(questions);
+      if (listeningTF) listeningTF = JSON.parse(listeningTF);
+      if (listeningGaps) listeningGaps = JSON.parse(listeningGaps);
+      if (grammarQuestions) grammarQuestions = JSON.parse(grammarQuestions);
+      if (tenseQuestions) tenseQuestions = JSON.parse(tenseQuestions);
+    } catch (jsonErr) {
+      console.log("❌ JSON PARSE ERROR:", jsonErr.message);
+      return res.status(400).json({ error: "JSON format noto‘g‘ri!" });
+    }
 
     const exam = await Exam.create({
       title,
       timeLimit,
       passPercentage,
       listeningAudio,
-      questions,
-      listeningTF,
-      listeningGaps
+      questions: questions || [],
+      listeningTF: listeningTF || [],
+      listeningGaps: listeningGaps || [],
+      grammarQuestions: grammarQuestions || [],
+      tenseQuestions: tenseQuestions || []
     });
 
     res.status(201).json({ success: true, exam });
+
   } catch (err) {
+    console.log("🔥 SERVER ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
