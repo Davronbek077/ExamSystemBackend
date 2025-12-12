@@ -11,7 +11,6 @@ const {
   submitExam
 } = require("../controllers/examController");
 
-
 // LISTENING papkasini avtomatik yaratish
 const uploadPath = path.join(__dirname, "..", "uploads/listening");
 
@@ -19,7 +18,6 @@ if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
   console.log("📁 listening papkasi yaratildi");
 }
-
 
 // Multer config
 const storage = multer.diskStorage({
@@ -33,11 +31,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-
 // =============================
 // CREATE EXAM
 // =============================
-router.post("/create", upload.single("audio"), createExam);
+router.post("/create", upload.single("listeningAudio"), createExam);
 
 // =============================
 // GET EXAMS
