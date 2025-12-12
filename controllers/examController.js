@@ -16,9 +16,14 @@ exports.createExam = async (req, res) => {
       listeningGaps
     } = req.body;
 
-    const listeningAudio = req.file ? req.file.path : null;
+    // 🔥 AUDIO URLNI TO‘G‘RI QILAMIZ
+    let listeningAudio = null;
 
-    // JSON stringlarni massivga aylantiramiz
+    if (req.file) {
+      listeningAudio = `${req.protocol}://${req.get("host")}/uploads/listening/${req.file.filename}`;
+    }
+
+    // JSON stringlarni massivga aylantirish
     if (questions) questions = JSON.parse(questions);
     if (listeningTF) listeningTF = JSON.parse(listeningTF);
     if (listeningGaps) listeningGaps = JSON.parse(listeningGaps);
@@ -27,7 +32,7 @@ exports.createExam = async (req, res) => {
       title,
       timeLimit,
       passPercentage,
-      listeningAudio,
+      listeningAudio,   // ✔ To‘g‘ri URL saqlaydi
       questions,
       listeningTF,
       listeningGaps
@@ -38,6 +43,7 @@ exports.createExam = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
