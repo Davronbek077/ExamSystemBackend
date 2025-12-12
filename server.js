@@ -17,30 +17,32 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ===== CREATE UPLOADS FOLDER (IF NOT EXISTS) =====
-const uploadsFolder = path.join(__dirname, "uploads/listening");
+// =============================
+//  LISTENING UPLOADS (RENDER)
+// =============================
+const uploadsFolder = "/opt/render/project/tmp/uploads/listening";
+
 if (!fs.existsSync(uploadsFolder)) {
   fs.mkdirSync(uploadsFolder, { recursive: true });
-  console.log("📁 uploads/listening created");
+  console.log("📁 TMP listening papkasi yaratildi");
 }
 
-// ===== STATIC FOLDER =====
-// This is IMPORTANT
-app.use("/uploads/listening", express.static(path.join(__dirname, "uploads/listening")));
+// Static (student audio o‘qishi uchun)
+app.use(
+  "/uploads/listening",
+  express.static("/opt/render/project/tmp/uploads/listening")
+);
 
-
-// ==== ROUTES ====
+// ===== ROUTES =====
 app.use("/exams", require("./routes/examRoutes"));
 app.use("/results", require("./routes/resultRoutes"));
 
-
-// ==== MONGO ====
+// ===== MONGO =====
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URL;
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.error("❌ MongoDB Error:", err));
 
-
-// ==== START ====
+// ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
