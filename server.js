@@ -26,13 +26,7 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
-if (!process.env.JWT_SECRET) {
-  console.error("❌ JWT_SECRET is not defined in .env");
-  process.exit(1);
-}
-
 // ==== ROUTES ====
-app.use("/auth", require("./routes/authRoutes"));
 app.use("/exams", require("./routes/examRoutes"));
 app.use("/results", require("./routes/resultRoutes"));
 
