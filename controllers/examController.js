@@ -17,8 +17,6 @@ exports.createExam = async (req, res) => {
       listeningGaps
     } = req.body;
 
-    const listeningAudio = null;
-
     questions = questions ? JSON.parse(questions) : [];
     grammarQuestions = grammarQuestions ? JSON.parse(grammarQuestions) : [];
     tenseTransforms = tenseTransforms ? JSON.parse(tenseTransforms) : [];
@@ -29,7 +27,6 @@ exports.createExam = async (req, res) => {
       title,
       timeLimit,
       passPercentage,
-      listeningAudio,
       questions,
       grammarQuestions,
       tenseTransforms,

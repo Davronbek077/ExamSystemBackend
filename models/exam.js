@@ -21,7 +21,7 @@ const tenseTransformSchema = new mongoose.Schema({
 
 // Basic questions
 const questionSchema = new mongoose.Schema({
-  type: { type: String, enum: ["mcq", "truefalse", "gapfill, grammar, tense"] },
+  type: { type: String, enum: ["mcq", "truefalse", "gapfill", "grammar", "tense"] },
   questionText: String,
   options: [String],
   correctAnswer: String,
