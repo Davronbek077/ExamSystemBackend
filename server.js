@@ -29,8 +29,14 @@ if (!fs.existsSync(uploadsFolder)) {
 
 // Static (student audio o‘qishi uchun)
 app.use(
-  "/uploads/listening",
-  express.static("/opt/render/project/tmp/uploads/listening")
+  "/uploads",
+  express.static("/opt/render/project/tmp/uploads", {
+    setHeaders: (res, path) => {
+      if (path.endsWith(".mp3")) {
+        res.set("Content-Type", "audio/mpeg");
+      }
+    }
+  })
 );
 
 // ===== ROUTES =====
