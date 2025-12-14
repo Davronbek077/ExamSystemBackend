@@ -12,43 +12,28 @@ exports.createExam = async (req, res) => {
       passPercentage,
       questions,
       grammarQuestions,
-      tenseTransforms,
-      listeningTF,
-      listeningGaps
+      tenseTransforms
     } = req.body;
 
-    // ✅ AUDIO — faqat filename saqlanadi
-    let listeningAudio = null;
-    if (req.file) {
-      listeningAudio = req.file.filename;
-    }
-
-    // ✅ JSON parse
     questions = questions ? JSON.parse(questions) : [];
     grammarQuestions = grammarQuestions ? JSON.parse(grammarQuestions) : [];
     tenseTransforms = tenseTransforms ? JSON.parse(tenseTransforms) : [];
-    listeningTF = listeningTF ? JSON.parse(listeningTF) : [];
-    listeningGaps = listeningGaps ? JSON.parse(listeningGaps) : [];
 
-    // ✅ MODEL NOMLARI BILAN MOS
     const exam = await Exam.create({
       title,
       timeLimit,
       passPercentage,
-      listeningAudio,
       questions,
       grammarQuestions,
-      tenseTransforms,     // 🔥 TO‘G‘RI
-      listeningTF,
-      listeningGaps
+      tenseTransforms
     });
 
     res.status(201).json({ success: true, exam });
   } catch (err) {
-    console.error("CREATE EXAM ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // ===============================
 //      GET ALL EXAMS
