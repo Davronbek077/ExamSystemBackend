@@ -8,37 +8,38 @@ const fs = require("fs");
 dotenv.config();
 const app = express();
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-}));
+// ================== CORS ==================
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 
+// ================== BODY ==================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // =============================
-//  LISTENING UPLOADS (RENDER)
+// LISTENING AUDIO (RENDER TMP)
 // =============================
-const uploadsFolder = "/opt/render/project/tmp/uploads/listening";
+const AUDIO_DIR = "/opt/render/project/tmp/uploads";
 
-if (!fs.existsSync(uploadsFolder)) {
-  fs.mkdirSync(uploadsFolder, { recursive: true });
-  console.log("📁 TMP listening papkasi yaratildi");
+// papka mavjud bo‘lmasa yaratamiz
+if (!fs.existsSync(AUDIO_DIR)) {
+  fs.mkdirSync(AUDIO_DIR, { recursive: true });
+  console.log("📁 Audio papka yaratildi:", AUDIO_DIR);
 }
 
-// Static (student audio o‘qishi uchun)
-import fs from "fs";
-import path from "path";
-
+// =============================
+// AUDIO STREAM ROUTE
+// =============================
 app.get("/audio/:filename", (req, res) => {
-  const filePath = path.join(
-    "/opt/render/project/tmp/uploads",
-    req.params.filename
-  );
+  const filePath = path.join(AUDIO_DIR, req.params.filename);
 
   if (!fs.existsSync(filePath)) {
-    return res.status(404).end();
+    console.log("❌ Audio topilmadi:", filePath);
+    return res.sendStatus(404);
   }
 
   const stat = fs.statSync(filePath);
@@ -71,17 +72,20 @@ app.get("/audio/:filename", (req, res) => {
   }
 });
 
-
-// ===== ROUTES =====
+// ================== ROUTES ==================
 app.use("/exams", require("./routes/examRoutes"));
 app.use("/results", require("./routes/resultRoutes"));
 
-// ===== MONGO =====
+// ================== MONGO ==================
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URL;
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.error("❌ MongoDB Error:", err));
 
-// ===== START SERVER =====
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
+
+// ================== START ==================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
