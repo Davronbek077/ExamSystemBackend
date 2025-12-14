@@ -6,19 +6,26 @@ const cors = require("cors");
 dotenv.config();
 const app = express();
 
-app.use(cors({ origin: "*" }));
+// ===== CORS =====
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ROUTES
+// ===== ROUTES =====
 app.use("/exams", require("./routes/examRoutes"));
 app.use("/results", require("./routes/resultRoutes"));
 
-// MONGO
+// ===== MONGO =====
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ Mongo error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.error("❌ Mongo Error:", err));
 
-// START
+// ===== START =====
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on ${PORT}`);
+});

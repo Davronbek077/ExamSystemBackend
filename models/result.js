@@ -2,7 +2,9 @@ const mongoose = require("mongoose");
 
 const resultSchema = new mongoose.Schema({
   examId: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+  studentId: { type: String, required: true },
+
   answers: [{ questionId: String, answer: String }],
   score: Number,
   percentage: Number,
