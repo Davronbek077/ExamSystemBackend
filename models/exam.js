@@ -1,13 +1,10 @@
 const mongoose = require("mongoose");
 
-// ==================
-// BASIC QUESTIONS
-// ==================
+// ===== BASIC QUESTION =====
 const questionSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["mcq", "truefalse", "gapfill", "grammar", "tense"],
-    required: true
+    enum: ["mcq", "truefalse", "gapfill"]
   },
   questionText: String,
   options: [String],
@@ -15,18 +12,14 @@ const questionSchema = new mongoose.Schema({
   points: { type: Number, default: 1 }
 });
 
-// ==================
-// GRAMMAR
-// ==================
+// ===== GRAMMAR =====
 const grammarSchema = new mongoose.Schema({
   scrambledWords: String,
   correctSentence: String,
   points: { type: Number, default: 1 }
 });
 
-// ==================
-// TENSE
-// ==================
+// ===== TENSE =====
 const tenseItemSchema = new mongoose.Schema({
   tense: String,
   correctSentence: String,
@@ -39,9 +32,7 @@ const tenseTransformSchema = new mongoose.Schema({
   points: { type: Number, default: 1 }
 });
 
-// ==================
-// LISTENING
-// ==================
+// ===== LISTENING =====
 const listeningTFSchema = new mongoose.Schema({
   statement: String,
   correct: Boolean
@@ -52,9 +43,7 @@ const listeningGapSchema = new mongoose.Schema({
   correctWord: String
 });
 
-// ==================
-// EXAM
-// ==================
+// ===== EXAM =====
 const examSchema = new mongoose.Schema({
   title: { type: String, required: true },
   timeLimit: Number,
@@ -64,7 +53,6 @@ const examSchema = new mongoose.Schema({
   grammarQuestions: [grammarSchema],
   tenseTransforms: [tenseTransformSchema],
 
-  // 👇 LISTENING QOLADI
   listeningTF: [listeningTFSchema],
   listeningGaps: [listeningGapSchema]
 

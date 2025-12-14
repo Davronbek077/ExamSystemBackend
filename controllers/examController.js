@@ -4,24 +4,19 @@ const Result = require("../models/result");
 // ===============================
 //      CREATE EXAM
 // ===============================
+
 exports.createExam = async (req, res) => {
   try {
-    let {
+    const {
       title,
       timeLimit,
       passPercentage,
-      questions,
-      grammarQuestions,
-      tenseTransforms,
-      listeningTF,
-      listeningGaps
+      questions = [],
+      grammarQuestions = [],
+      tenseTransforms = [],
+      listeningTF = [],
+      listeningGaps = []
     } = req.body;
-
-    questions = questions ? JSON.parse(questions) : [];
-    grammarQuestions = grammarQuestions ? JSON.parse(grammarQuestions) : [];
-    tenseTransforms = tenseTransforms ? JSON.parse(tenseTransforms) : [];
-    listeningTF = listeningTF ? JSON.parse(listeningTF) : [];
-    listeningGaps = listeningGaps ? JSON.parse(listeningGaps) : [];
 
     const exam = await Exam.create({
       title,
@@ -36,6 +31,7 @@ exports.createExam = async (req, res) => {
 
     res.status(201).json({ success: true, exam });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
