@@ -5,6 +5,7 @@ const Result = require("../models/result");
 // ===============================
 //      CREATE EXAM
 // ===============================
+
 exports.createExam = async (req, res) => {
   try {
     let {
@@ -12,40 +13,43 @@ exports.createExam = async (req, res) => {
       timeLimit,
       passPercentage,
       questions,
+      grammarQuestions,
+      tenseTransforms,
       listeningTF,
       listeningGaps
     } = req.body;
 
-    // 🔥 AUDIO URLNI TO‘G‘RI QILAMIZ
+    // AUDIO
     let listeningAudio = null;
-
     if (req.file) {
       listeningAudio = `${req.protocol}://${req.get("host")}/uploads/listening/${req.file.filename}`;
     }
 
-    // JSON stringlarni massivga aylantirish
-    if (questions) questions = JSON.parse(questions);
-    if (listeningTF) listeningTF = JSON.parse(listeningTF);
-    if (listeningGaps) listeningGaps = JSON.parse(listeningGaps);
+    // JSON parse
+    questions = questions ? JSON.parse(questions) : [];
+    grammarQuestions = grammarQuestions ? JSON.parse(grammarQuestions) : [];
+    tenseTransforms = tenseTransforms ? JSON.parse(tenseTransforms) : [];
+    listeningTF = listeningTF ? JSON.parse(listeningTF) : [];
+    listeningGaps = listeningGaps ? JSON.parse(listeningGaps) : [];
 
     const exam = await Exam.create({
       title,
       timeLimit,
       passPercentage,
-      listeningAudio,   // ✔ To‘g‘ri URL saqlaydi
+      listeningAudio,
       questions,
+      grammarQuestions,
+      tenseQuestions: tenseTransforms, // MUHIM
       listeningTF,
       listeningGaps
     });
 
     res.status(201).json({ success: true, exam });
   } catch (err) {
+    console.error("CREATE EXAM ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
-
-
 
 // ===============================
 //      GET ALL EXAMS
