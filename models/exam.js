@@ -1,16 +1,36 @@
 const mongoose = require("mongoose");
 
-// Grammar
+// ==================
+// BASIC QUESTIONS
+// ==================
+const questionSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["mcq", "truefalse", "gapfill", "grammar", "tense"],
+    required: true
+  },
+  questionText: String,
+  options: [String],
+  correctAnswer: String,
+  points: { type: Number, default: 1 }
+});
+
+// ==================
+// GRAMMAR
+// ==================
 const grammarSchema = new mongoose.Schema({
   scrambledWords: String,
   correctSentence: String,
   points: { type: Number, default: 1 }
 });
 
-// Tense
+// ==================
+// TENSE
+// ==================
 const tenseItemSchema = new mongoose.Schema({
   tense: String,
-  correctSentence: String
+  correctSentence: String,
+  points: { type: Number, default: 1 }
 });
 
 const tenseTransformSchema = new mongoose.Schema({
@@ -19,15 +39,22 @@ const tenseTransformSchema = new mongoose.Schema({
   points: { type: Number, default: 1 }
 });
 
-// Basic questions
-const questionSchema = new mongoose.Schema({
-  type: { type: String, enum: ["mcq", "truefalse", "gapfill", "grammar", "tense"] },
-  questionText: String,
-  options: [String],
-  correctAnswer: String,
-  points: { type: Number, default: 1 }
+// ==================
+// LISTENING
+// ==================
+const listeningTFSchema = new mongoose.Schema({
+  statement: String,
+  correct: Boolean
 });
 
+const listeningGapSchema = new mongoose.Schema({
+  sentence: String,
+  correctWord: String
+});
+
+// ==================
+// EXAM
+// ==================
 const examSchema = new mongoose.Schema({
   title: { type: String, required: true },
   timeLimit: Number,
@@ -35,7 +62,11 @@ const examSchema = new mongoose.Schema({
 
   questions: [questionSchema],
   grammarQuestions: [grammarSchema],
-  tenseTransforms: [tenseTransformSchema]
+  tenseTransforms: [tenseTransformSchema],
+
+  // 👇 LISTENING QOLADI
+  listeningTF: [listeningTFSchema],
+  listeningGaps: [listeningGapSchema]
 
 }, { timestamps: true });
 

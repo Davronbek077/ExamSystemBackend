@@ -3,38 +3,76 @@ const Exam = require("../models/exam");
 
 exports.submitExam = async (req, res) => {
   try {
-    const { examId, answers, studentId } = req.body; // 👈 body dan olamiz
+    let { examId, answers, studentId } = req.body;
+
+    answers = typeof answers === "string" ? JSON.parse(answers) : answers;
 
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Exam not found" });
 
     let score = 0;
+    let total = 0;
+
+    // =====================
+    // BASIC QUESTIONS
+    // =====================
     exam.questions.forEach((q) => {
-      const studentAnswer = Array.isArray(answers)
-        ? answers.find(a => a.questionId === q._id.toString())
-        : null;
+      total += q.points || 1;
+
+      const studentAnswer = answers.find(
+        a => a.questionId === q._id.toString()
+      );
 
       if (!studentAnswer) return;
 
-      if (["mcq", "truefalse"].includes(q.type)) {
-        if (studentAnswer.answer === q.correctAnswer) score += q.points;
-      } else {
-        if (
-          String(studentAnswer.answer).trim().toLowerCase() ===
-          String(q.correctAnswer).trim().toLowerCase()
-        ) {
-          score += q.points;
-        }
+      if (
+        String(studentAnswer.answer).trim().toLowerCase() ===
+        String(q.correctAnswer).trim().toLowerCase()
+      ) {
+        score += q.points || 1;
       }
     });
 
-    const total = exam.questions.reduce((s, q) => s + (q.points || 0), 0) || 1;
-    const percentage = Math.round((score / total) * 100);
+    // =====================
+    // LISTENING TRUE/FALSE
+    // =====================
+    exam.listeningTF?.forEach((q, index) => {
+      total += 1;
+
+      const a = answers.find(
+        x => x.type === "listeningTF" && x.index === index
+      );
+
+      if (a && a.answer === q.correct) {
+        score += 1;
+      }
+    });
+
+    // =====================
+    // LISTENING GAPFILL
+    // =====================
+    exam.listeningGaps?.forEach((q, index) => {
+      total += 1;
+
+      const a = answers.find(
+        x => x.type === "listeningGap" && x.index === index
+      );
+
+      if (
+        a &&
+        a.answer.trim().toLowerCase() ===
+        q.correctWord.trim().toLowerCase()
+      ) {
+        score += 1;
+      }
+    });
+
+    const percentage = Math.round((score / (total || 1)) * 100);
     const passed = percentage >= (exam.passPercentage || 50);
 
     const result = await Result.create({
       examId,
-      studentId, // 👈 endi xavfsiz
+      studentId,
       answers,
       score,
       percentage,
@@ -43,11 +81,13 @@ exports.submitExam = async (req, res) => {
     });
 
     res.json({ success: true, result });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server Error" });
   }
 };
+
 
 
 // TEACHER — get exam stats
