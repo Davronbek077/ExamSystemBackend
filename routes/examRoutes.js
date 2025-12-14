@@ -1,15 +1,23 @@
 const express = require("express");
 const router = express.Router();
+
 const Exam = require("../models/exam");
-const Result = require("../models/result");
+const Result = require("../models/result"); // 👈 SHU MUHIM
 
-// CONTROLLERS
-const { createExam, getAllExams, getExamById, submitExam } = require("../controllers/examController");
+const {
+  createExam,
+  getAllExams,
+  getExamById,
+  submitExam
+} = require("../controllers/examController");
 
+// =========================
+// CLEAR ALL EXAMS
+// =========================
 router.delete("/clear", async (req, res) => {
   try {
     await Exam.deleteMany({});
-    await Result.deleteMany({});
+    await Result.deleteMany({}); // 👈 endi Result mavjud
 
     res.json({
       success: true,
@@ -20,15 +28,10 @@ router.delete("/clear", async (req, res) => {
   }
 });
 
-
-// CREATE EXAM (oddiy JSON)
+// ROUTES
 router.post("/create", createExam);
-
-// GET
 router.get("/all", getAllExams);
 router.get("/:id", getExamById);
-
-// SUBMIT
 router.post("/submit", submitExam);
 
 module.exports = router;
