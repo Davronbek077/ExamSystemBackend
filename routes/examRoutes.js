@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Exam = require("../models/exam")
+const Exam = require("../models/exam");
+const Result = require("../models/result");
 
 // CONTROLLERS
 const { createExam, getAllExams, getExamById, submitExam } = require("../controllers/examController");
