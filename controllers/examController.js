@@ -1,11 +1,9 @@
 const Exam = require("../models/exam");
 const Result = require("../models/result");
 
-
 // ===============================
 //      CREATE EXAM
 // ===============================
-
 exports.createExam = async (req, res) => {
   try {
     let {
@@ -19,19 +17,20 @@ exports.createExam = async (req, res) => {
       listeningGaps
     } = req.body;
 
-    // AUDIO
+    // ✅ AUDIO — faqat filename saqlanadi
     let listeningAudio = null;
     if (req.file) {
-      listeningAudio = `${req.protocol}://${req.get("host")}/uploads/listening/${req.file.filename}`;
+      listeningAudio = req.file.filename;
     }
 
-    // JSON parse
+    // ✅ JSON parse
     questions = questions ? JSON.parse(questions) : [];
     grammarQuestions = grammarQuestions ? JSON.parse(grammarQuestions) : [];
     tenseTransforms = tenseTransforms ? JSON.parse(tenseTransforms) : [];
     listeningTF = listeningTF ? JSON.parse(listeningTF) : [];
     listeningGaps = listeningGaps ? JSON.parse(listeningGaps) : [];
 
+    // ✅ MODEL NOMLARI BILAN MOS
     const exam = await Exam.create({
       title,
       timeLimit,
@@ -39,7 +38,7 @@ exports.createExam = async (req, res) => {
       listeningAudio,
       questions,
       grammarQuestions,
-      tenseQuestions: tenseTransforms, // MUHIM
+      tenseTransforms,     // 🔥 TO‘G‘RI
       listeningTF,
       listeningGaps
     });
@@ -63,7 +62,6 @@ exports.getAllExams = async (req, res) => {
   }
 };
 
-
 // ===============================
 //      GET ONE EXAM
 // ===============================
@@ -77,35 +75,35 @@ exports.getExamById = async (req, res) => {
   }
 };
 
-
 // ===============================
 //      SUBMIT EXAM
 // ===============================
 exports.submitExam = async (req, res) => {
   try {
     const { examId, answers } = req.body;
-    const studentId = req.user._id;
 
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Exam not found" });
 
     let score = 0;
 
-
     // ===========================================
-    // 1) BASIC QUESTIONS: MCQ, TRUE/FALSE, GAPFILL
+    // 1) BASIC QUESTIONS
     // ===========================================
     exam.questions.forEach((q) => {
       const ans = answers.find(a => a.qid === q._id.toString());
       if (!ans) return;
-      if (ans.answer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()) {
+
+      if (
+        ans.answer.trim().toLowerCase() ===
+        q.correctAnswer.trim().toLowerCase()
+      ) {
         score += q.points;
       }
     });
 
-
     // ===========================================
-    // 2) LISTENING TRUE / FALSE
+    // 2) LISTENING TRUE/FALSE
     // ===========================================
     exam.listeningTF.forEach((item, i) => {
       const ans = answers.find(a => a.qid === "ltf" + i);
@@ -113,71 +111,68 @@ exports.submitExam = async (req, res) => {
       if (String(item.correct) === String(ans.answer)) score += 1;
     });
 
-
     // ===========================================
-    // 3) LISTENING GAPS
+    // 3) LISTENING GAPFILL
     // ===========================================
     exam.listeningGaps.forEach((item, i) => {
       const ans = answers.find(a => a.qid === "lgap" + i);
       if (!ans) return;
 
-      if (item.correctWord.trim().toLowerCase() === ans.answer.trim().toLowerCase()) {
+      if (
+        item.correctWord.trim().toLowerCase() ===
+        ans.answer.trim().toLowerCase()
+      ) {
         score += 1;
       }
     });
 
-
     // ===========================================
-    // 4) GRAMMAR (WORD ORDERING)
+    // 4) GRAMMAR
     // ===========================================
     exam.grammarQuestions.forEach((item, i) => {
       const ans = answers.find(a => a.qid === "grammar" + i);
       if (!ans) return;
 
-      if (item.correctSentence.trim().toLowerCase() === ans.answer.trim().toLowerCase()) {
+      if (
+        item.correctSentence.trim().toLowerCase() ===
+        ans.answer.trim().toLowerCase()
+      ) {
         score += item.points || 1;
       }
     });
 
-
     // ===========================================
-    // 5) TENSE TRANSFORMATION
+    // 5) TENSE TRANSFORMATION (🔥 TUZATILDI)
     // ===========================================
-    exam.tenseQuestions.forEach((q, qi) => {
-      q.targets.forEach((t, ti) => {
-
+    exam.tenseTransforms.forEach((q, qi) => {
+      q.transforms.forEach((t, ti) => {
         const ans = answers.find(a => a.qid === `tense${qi}_${ti}`);
         if (!ans) return;
 
-        if (t.correct.trim().toLowerCase() === ans.answer.trim().toLowerCase()) {
-          score += t.points || 1;
+        if (
+          t.correctSentence.trim().toLowerCase() ===
+          ans.answer.trim().toLowerCase()
+        ) {
+          score += q.points || 1;
         }
-
       });
     });
 
-
-    // ===============================
-    //      TOTAL QUESTIONS
-    // ===============================
+    // ===========================================
+    // TOTAL
+    // ===========================================
     const total =
       exam.questions.length +
       exam.listeningTF.length +
       exam.listeningGaps.length +
-      (exam.grammarQuestions?.length || 0) +
-      exam.tenseQuestions.reduce((sum, q) => sum + q.targets.length, 0);
-
+      exam.grammarQuestions.length +
+      exam.tenseTransforms.reduce((s, q) => s + q.transforms.length, 0);
 
     const percentage = Math.round((score / total) * 100);
     const passed = percentage >= (exam.passPercentage || 50);
 
-
-    // ===============================
-    //      SAVE RESULT
-    // ===============================
     const result = await Result.create({
       examId,
-      studentId,
       answers,
       score,
       percentage,
@@ -185,7 +180,7 @@ exports.submitExam = async (req, res) => {
       submittedAt: new Date(),
     });
 
-    res.status(200).json({ message: "Exam submitted", result });
+    res.json({ message: "Exam submitted", result });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
