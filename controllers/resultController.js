@@ -1,152 +1,58 @@
-const Result = require("../models/result");
-const Exam = require("../models/exam");
+const Exam = require("../models/Exam");
+const Result = require("../models/Result");
 
 exports.submitExam = async (req, res) => {
   try {
-    console.log("SUBMIT BODY:", req.body);
-
     const { examId, answers } = req.body;
 
-    if (!examId || !Array.isArray(answers)) {
-      return res.status(400).json({ error: "Invalid payload" });
-    }
-
     const exam = await Exam.findById(examId);
-    if (!exam) {
-      return res.status(404).json({ error: "Exam not found" });
-    }
+    if (!exam) return res.status(404).json({ message: "Imtihon topilmadi" });
 
-    let totalQuestions = 0;
-    let correctAnswers = 0;
+    let score = 0;
+    let total = 0;
 
-    /* ===== BASIC QUESTIONS ===== */
-    exam.questions.forEach((q) => {
-      totalQuestions++;
-      const userAnswer = answers.find(
-        (a) => a.questionId.toString() === q._id.toString()
-      );
+    exam.questions.forEach(q => {
+      total += q.points;
 
-      if (!userAnswer) return;
+      const userAns = answers.find(a => a.questionId === q._id.toString());
+      if (!userAns) return;
 
-      if (
-        String(userAnswer.answer).toLowerCase().trim() ===
-        String(q.correctAnswer).toLowerCase().trim()
-      ) {
-        correctAnswers++;
+      if (userAns.answer === q.correctAnswer) {
+        score += q.points;
       }
     });
 
-    /* ===== GRAMMAR ===== */
-    exam.grammarQuestions.forEach((q) => {
-      totalQuestions++;
-      const userAnswer = answers.find(
-        (a) => a.questionId.toString() === q._id.toString()
-      );
-      if (!userAnswer) return;
-
-      if (
-        userAnswer.answer.toLowerCase().trim() ===
-        q.correctSentence.toLowerCase().trim()
-      ) {
-        correctAnswers++;
-      }
-    });
-
-    /* ===== TENSE ===== */
-    exam.tenseTransforms.forEach((t) => {
-      t.transforms.forEach((tr) => {
-        totalQuestions++;
-        const userAnswer = answers.find(
-          (a) => a.questionId.toString() === tr._id.toString()
-        );
-        if (!userAnswer) return;
-
-        if (
-          userAnswer.answer.toLowerCase().trim() ===
-          tr.correct.toLowerCase().trim()
-        ) {
-          correctAnswers++;
-        }
-      });
-    });
-
-    /* ===== LISTENING TF ===== */
-    exam.listeningTF.forEach((q) => {
-      totalQuestions++;
-      const userAnswer = answers.find(
-        (a) => a.questionId.toString() === q._id.toString()
-      );
-      if (!userAnswer) return;
-
-      if (
-        String(userAnswer.answer).toLowerCase() ===
-        String(q.correct).toLowerCase()
-      ) {
-        correctAnswers++;
-      }
-    });
-
-    /* ===== LISTENING GAP ===== */
-    exam.listeningGaps.forEach((q) => {
-      totalQuestions++;
-      const userAnswer = answers.find(
-        (a) => a.questionId.toString() === q._id.toString()
-      );
-      if (!userAnswer) return;
-
-      if (
-        userAnswer.answer.toLowerCase().trim() ===
-        q.correct.toLowerCase().trim()
-      ) {
-        correctAnswers++;
-      }
-    });
-
-    const percentage =
-      totalQuestions === 0
-        ? 0
-        : Math.round((correctAnswers / totalQuestions) * 100);
-
+    const percentage = Math.round((score / total) * 100);
     const passed = percentage >= exam.passPercentage;
 
     const result = await Result.create({
       examId,
-      answers,
-      score: correctAnswers,
+      score,
       percentage,
       passed,
+      createdAt: new Date()
     });
 
     res.json({
-      success: true,
-      result,
+      result: {
+        score,
+        percentage,
+        passed
+      }
     });
-  } catch (err) {
-    console.error("SUBMIT EXAM ERROR:", err);
-    res.status(500).json({ error: err.message });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Natija hisoblashda xato" });
   }
 };
 
-
-
-// TEACHER — get exam stats
 exports.getExamStats = async (req, res) => {
-  try {
-    const examId = req.params.id;
-    const results = await Result.find({ examId });
+  const { id } = req.params;
 
-    const total = results.length;
-    const passed = results.filter(r => r.passed).length;
-    const failed = total - passed;
+  const total = await Result.countDocuments({ examId: id });
+  const passed = await Result.countDocuments({ examId: id, passed: true });
+  const failed = total - passed;
 
-    res.json({
-      total,
-      passed,
-      failed,
-      passPercentage: total ? Math.round((passed / total) * 100) : 0,
-      results
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json({ total, passed, failed });
 };
