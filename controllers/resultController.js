@@ -3,88 +3,127 @@ const Exam = require("../models/exam");
 
 exports.submitExam = async (req, res) => {
   try {
-    let { examId, answers, studentId } = req.body;
+    console.log("SUBMIT BODY:", req.body);
 
-    answers = typeof answers === "string" ? JSON.parse(answers) : answers;
+    const { examId, answers } = req.body;
+
+    if (!examId || !Array.isArray(answers)) {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
 
     const exam = await Exam.findById(examId);
-    if (!exam) return res.status(404).json({ error: "Exam not found" });
+    if (!exam) {
+      return res.status(404).json({ error: "Exam not found" });
+    }
 
-    let score = 0;
-    let total = 0;
+    let totalQuestions = 0;
+    let correctAnswers = 0;
 
-    // =====================
-    // BASIC QUESTIONS
-    // =====================
+    /* ===== BASIC QUESTIONS ===== */
     exam.questions.forEach((q) => {
-      total += q.points || 1;
-
-      const studentAnswer = answers.find(
-        a => a.questionId === q._id.toString()
+      totalQuestions++;
+      const userAnswer = answers.find(
+        (a) => a.questionId.toString() === q._id.toString()
       );
 
-      if (!studentAnswer) return;
+      if (!userAnswer) return;
 
       if (
-        String(studentAnswer.answer).trim().toLowerCase() ===
-        String(q.correctAnswer).trim().toLowerCase()
+        String(userAnswer.answer).toLowerCase().trim() ===
+        String(q.correctAnswer).toLowerCase().trim()
       ) {
-        score += q.points || 1;
+        correctAnswers++;
       }
     });
 
-    // =====================
-    // LISTENING TRUE/FALSE
-    // =====================
-    exam.listeningTF?.forEach((q, index) => {
-      total += 1;
-
-      const a = answers.find(
-        x => x.type === "listeningTF" && x.index === index
+    /* ===== GRAMMAR ===== */
+    exam.grammarQuestions.forEach((q) => {
+      totalQuestions++;
+      const userAnswer = answers.find(
+        (a) => a.questionId.toString() === q._id.toString()
       );
-
-      if (a && a.answer === q.correct) {
-        score += 1;
-      }
-    });
-
-    // =====================
-    // LISTENING GAPFILL
-    // =====================
-    exam.listeningGaps?.forEach((q, index) => {
-      total += 1;
-
-      const a = answers.find(
-        x => x.type === "listeningGap" && x.index === index
-      );
+      if (!userAnswer) return;
 
       if (
-        a &&
-        a.answer.trim().toLowerCase() ===
-        q.correctWord.trim().toLowerCase()
+        userAnswer.answer.toLowerCase().trim() ===
+        q.correctSentence.toLowerCase().trim()
       ) {
-        score += 1;
+        correctAnswers++;
       }
     });
 
-    const percentage = Math.round((score / (total || 1)) * 100);
-    const passed = percentage >= (exam.passPercentage || 50);
+    /* ===== TENSE ===== */
+    exam.tenseTransforms.forEach((t) => {
+      t.transforms.forEach((tr) => {
+        totalQuestions++;
+        const userAnswer = answers.find(
+          (a) => a.questionId.toString() === tr._id.toString()
+        );
+        if (!userAnswer) return;
+
+        if (
+          userAnswer.answer.toLowerCase().trim() ===
+          tr.correct.toLowerCase().trim()
+        ) {
+          correctAnswers++;
+        }
+      });
+    });
+
+    /* ===== LISTENING TF ===== */
+    exam.listeningTF.forEach((q) => {
+      totalQuestions++;
+      const userAnswer = answers.find(
+        (a) => a.questionId.toString() === q._id.toString()
+      );
+      if (!userAnswer) return;
+
+      if (
+        String(userAnswer.answer).toLowerCase() ===
+        String(q.correct).toLowerCase()
+      ) {
+        correctAnswers++;
+      }
+    });
+
+    /* ===== LISTENING GAP ===== */
+    exam.listeningGaps.forEach((q) => {
+      totalQuestions++;
+      const userAnswer = answers.find(
+        (a) => a.questionId.toString() === q._id.toString()
+      );
+      if (!userAnswer) return;
+
+      if (
+        userAnswer.answer.toLowerCase().trim() ===
+        q.correct.toLowerCase().trim()
+      ) {
+        correctAnswers++;
+      }
+    });
+
+    const percentage =
+      totalQuestions === 0
+        ? 0
+        : Math.round((correctAnswers / totalQuestions) * 100);
+
+    const passed = percentage >= exam.passPercentage;
 
     const result = await Result.create({
       examId,
-      studentId,
       answers,
-      score,
+      score: correctAnswers,
       percentage,
       passed,
-      submittedAt: new Date()
     });
 
-    res.json({ success: true, result });
-
+    res.json({
+      success: true,
+      result,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server Error" });
+    console.error("SUBMIT EXAM ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 

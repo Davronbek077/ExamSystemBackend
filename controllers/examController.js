@@ -18,6 +18,10 @@ exports.createExam = async (req, res) => {
       listeningGaps = []
     } = req.body;
 
+    if (!title) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+
     const exam = await Exam.create({
       title,
       timeLimit,
@@ -31,10 +35,11 @@ exports.createExam = async (req, res) => {
 
     res.status(201).json({ success: true, exam });
   } catch (err) {
-    console.error(err);
+    console.error("CREATE EXAM ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // ===============================
 //      GET ALL EXAMS
