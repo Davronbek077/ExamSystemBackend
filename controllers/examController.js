@@ -85,10 +85,29 @@ exports.deleteExam = async (req, res) => {
 
 exports.updateExam = async (req, res) => {
   try {
+    const {
+      title,
+      timeLimit,
+      passPercentage,
+      questions = [],
+      listeningTF = [],
+      listeningGaps = []
+    } = req.body;
+
     const updated = await Exam.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true, runValidators: true }
+      {
+        title,
+        timeLimit,
+        passPercentage,
+        questions,
+        listeningTF,
+        listeningGaps
+      },
+      {
+        new: true,
+        runValidators: false // MUHIM
+      }
     );
 
     if (!updated) {
@@ -98,6 +117,6 @@ exports.updateExam = async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.error("UPDATE ERROR:", err);
-    res.status(500).json({ message: "Tahrirlashda xato" });
+    res.status(500).json({ error: err.message });
   }
 };
