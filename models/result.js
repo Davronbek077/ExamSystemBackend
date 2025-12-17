@@ -7,6 +7,12 @@ const resultSchema = new mongoose.Schema(
       ref: "Exam",
       required: true,
     },
+
+    studentName: {
+      type: String,
+      required: true
+    },
+
     answers: [
       {
         questionId: mongoose.Schema.Types.ObjectId,

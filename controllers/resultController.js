@@ -4,7 +4,11 @@ const Result = require("../models/result");
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
   try {
-    const { examId, answers = [] } = req.body;
+    const { examId, answers = [], studentName } = req.body;
+
+    if (!studentName) {
+      return res.status(400).json({message: "Ism kiritilmagan"});
+    }
 
     if (!examId) {
       return res.status(400).json({ message: "examId yo‘q" });
@@ -95,13 +99,14 @@ exports.submitExam = async (req, res) => {
 
     await Result.create({
       examId,
+      studentName,
       answers,
       score,
       percentage,
       passed
     });
 
-    res.json({ result: { score, percentage, passed } });
+    res.json({ result: { score, percentage, passed, studentName } });
 
   } catch (err) {
     console.error("SUBMIT EXAM ERROR:", err);
@@ -116,39 +121,28 @@ exports.submitExam = async (req, res) => {
 /* ================= GET EXAM STATS ================= */
 exports.getExamStats = async (req, res) => {
   try {
-    const { id } = req.params; // examId
+    const examId = req.params.id;
 
-    const results = await Result.find({ examId: id });
+    const results = await Result.find({ examId }).sort({ createdAt: -1 });
 
-    if (!results.length) {
-      return res.json({
-        totalAttempts: 0,
-        passed: 0,
-        failed: 0,
-        averageScore: 0
-      });
-    }
-
-    const totalAttempts = results.length;
+    const total = results.length;
     const passed = results.filter(r => r.passed).length;
-    const failed = totalAttempts - passed;
-
-    const averageScore = Math.round(
-      results.reduce((sum, r) => sum + r.percentage, 0) / totalAttempts
-    );
+    const failed = total - passed;
 
     res.json({
-      totalAttempts,
+      total,
       passed,
       failed,
-      averageScore
+      results: results.map(r => ({
+        _id: r._id,
+        studentName: r.studentName,
+        percentage: r.percentage,
+        passed: r.passed,
+        createdAt: r.createdAt
+      }))
     });
 
   } catch (err) {
-    console.error("GET EXAM STATS ERROR:", err);
-    res.status(500).json({
-      message: "Statistikani olishda xato",
-      error: err.message
-    });
+    res.status(500).json({ message: "Statistika xato" });
   }
 };
