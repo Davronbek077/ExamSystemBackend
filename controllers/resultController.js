@@ -10,6 +10,9 @@ exports.submitExam = async (req, res) => {
       return res.status(404).json({ message: "Imtihon topilmadi" });
     }
 
+    console.log("REQ BODY:", req.body);
+console.log("ANSWERS:", req.body.answers);
+
     let score = 0;
     let total = 0;
 
@@ -89,7 +92,11 @@ exports.submitExam = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("SUBMIT ERROR:", err);
-    res.status(500).json({ message: "Natija hisoblashda xato" });
+    console.error("SUBMIT EXAM ERROR FULL:", err);
+    res.status(500).json({
+      message: "Natija hisoblashda xato",
+      error: err.message
+    });
   }
+  
 };
