@@ -8,6 +8,8 @@ const {
   createExam,
   getAllExams,
   getExamById,
+  deleteExam,
+  updateExam
 } = require("../controllers/examController");
 
 // =========================
@@ -31,5 +33,7 @@ router.delete("/clear", async (req, res) => {
 router.post("/create", createExam);
 router.get("/all", getAllExams);
 router.get("/:id", getExamById);
+router.delete("/:id", deleteExam);
+router.put("/id", updateExam);
 
 module.exports = router;
