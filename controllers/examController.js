@@ -85,12 +85,10 @@ exports.deleteExam = async (req, res) => {
 
 exports.updateExam = async (req, res) => {
   try {
-    const { id } = req.params;
-
     const updated = await Exam.findByIdAndUpdate(
-      id,
+      req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!updated) {
@@ -99,6 +97,7 @@ exports.updateExam = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
+    console.error("UPDATE ERROR:", err);
     res.status(500).json({ message: "Tahrirlashda xato" });
   }
 };
