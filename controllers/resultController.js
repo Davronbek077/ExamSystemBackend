@@ -1,58 +1,95 @@
-const Exam = require("../models/Exam");
-const Result = require("../models/Result");
+const Exam = require("../models/exam");
+const Result = require("../models/result");
 
 exports.submitExam = async (req, res) => {
   try {
     const { examId, answers } = req.body;
 
     const exam = await Exam.findById(examId);
-    if (!exam) return res.status(404).json({ message: "Imtihon topilmadi" });
+    if (!exam) {
+      return res.status(404).json({ message: "Imtihon topilmadi" });
+    }
 
     let score = 0;
     let total = 0;
 
+    const normalize = (v) =>
+      v?.toString().trim().toLowerCase();
+
+    // ===== BASIC QUESTIONS =====
     exam.questions.forEach(q => {
-      total += q.points;
+      total += q.points || 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
 
-      const userAns = answers.find(a => a.questionId === q._id.toString());
-      if (!userAns) return;
-
-      if (userAns.answer === q.correctAnswer) {
-        score += q.points;
+      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        score += q.points || 1;
       }
     });
 
-    const percentage = Math.round((score / total) * 100);
+    // ===== GRAMMAR =====
+    exam.grammarQuestions.forEach(q => {
+      total += q.points || 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+
+      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
+        score += q.points || 1;
+      }
+    });
+
+    // ===== TENSE TRANSFORMS =====
+    exam.tenseTransforms.forEach(block => {
+      block.transforms.forEach(t => {
+        total += t.points || 1;
+
+        const user = answers.find(
+          a => a.questionId === t._id.toString()
+        );
+
+        if (user && normalize(user.answer) === normalize(t.correctSentence)) {
+          score += t.points || 1;
+        }
+      });
+    });
+
+    // ===== LISTENING TRUE/FALSE =====
+    exam.listeningTF.forEach(q => {
+      total += 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+
+      if (user && String(q.correct) === String(user.answer)) {
+        score += 1;
+      }
+    });
+
+    // ===== LISTENING GAP =====
+    exam.listeningGaps.forEach(q => {
+      total += 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+
+      if (user && normalize(user.answer) === normalize(q.correctWord)) {
+        score += 1;
+      }
+    });
+
+    const percentage = total === 0 ? 0 : Math.round((score / total) * 100);
     const passed = percentage >= exam.passPercentage;
 
-    const result = await Result.create({
+    await Result.create({
       examId,
+      answers,
       score,
       percentage,
       passed,
-      createdAt: new Date()
     });
 
     res.json({
-      result: {
-        score,
-        percentage,
-        passed
-      }
+      score,
+      percentage,
+      passed
     });
 
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error("SUBMIT ERROR:", err);
     res.status(500).json({ message: "Natija hisoblashda xato" });
   }
-};
-
-exports.getExamStats = async (req, res) => {
-  const { id } = req.params;
-
-  const total = await Result.countDocuments({ examId: id });
-  const passed = await Result.countDocuments({ examId: id, passed: true });
-  const failed = total - passed;
-
-  res.json({ total, passed, failed });
 };

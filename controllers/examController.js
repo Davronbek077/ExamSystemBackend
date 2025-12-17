@@ -67,26 +67,3 @@ exports.getExamById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-// ===============================
-//      SUBMIT EXAM
-// ===============================
-exports.submitExam = async (req, res) => {
-  try {
-    let { examId, studentName, answers, score } = req.body;
-
-    answers = answers ? JSON.parse(answers) : [];
-
-    const result = await Result.create({
-      examId,
-      studentName,
-      answers,
-      score: score || 0,
-      submittedAt: new Date()
-    });
-
-    res.status(201).json({ success: true, result });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
