@@ -1,75 +1,91 @@
 const Exam = require("../models/exam");
 const Result = require("../models/result");
 
+/* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
   try {
-    const { examId, answers } = req.body;
+    const { examId, answers = [] } = req.body;
+
+    if (!examId) {
+      return res.status(400).json({ message: "examId yo‘q" });
+    }
 
     const exam = await Exam.findById(examId);
     if (!exam) {
       return res.status(404).json({ message: "Imtihon topilmadi" });
     }
 
-    console.log("REQ BODY:", req.body);
-console.log("ANSWERS:", req.body.answers);
-
     let score = 0;
     let total = 0;
 
-    const normalize = (v) =>
-      v?.toString().trim().toLowerCase();
-
-    // ===== BASIC QUESTIONS =====
+    // BASIC
     exam.questions.forEach(q => {
       total += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
+      if (!user || user.answer == null) return;
 
-      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+      if (
+        String(user.answer).trim().toLowerCase() ===
+        String(q.correctAnswer).trim().toLowerCase()
+      ) {
         score += q.points || 1;
       }
     });
 
-    // ===== GRAMMAR =====
+    // GRAMMAR
     exam.grammarQuestions.forEach(q => {
       total += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
+      if (!user || user.answer == null) return;
 
-      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
+      if (
+        user.answer.trim().toLowerCase() ===
+        q.correctSentence.trim().toLowerCase()
+      ) {
         score += q.points || 1;
       }
     });
 
-    // ===== TENSE TRANSFORMS =====
-    exam.tenseTransforms.forEach(block => {
-      block.transforms.forEach(t => {
-        total += t.points || 1;
+    // TENSE
+    exam.tenseTransforms.forEach(t => {
+      t.transforms.forEach(tr => {
+        total += tr.points || 1;
+        const user = answers.find(a => a.questionId === tr._id.toString());
+        if (!user || user.answer == null) return;
 
-        const user = answers.find(
-          a => a.questionId === t._id.toString()
-        );
-
-        if (user && normalize(user.answer) === normalize(t.correctSentence)) {
-          score += t.points || 1;
+        if (
+          user.answer.trim().toLowerCase() ===
+          tr.correctSentence.trim().toLowerCase()
+        ) {
+          score += tr.points || 1;
         }
       });
     });
 
-    // ===== LISTENING TRUE/FALSE =====
+    // LISTENING TF
     exam.listeningTF.forEach(q => {
       total += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
+      if (!user || user.answer == null) return;
 
-      if (user && String(q.correct) === String(user.answer)) {
+      if (
+        String(user.answer).toLowerCase() ===
+        String(q.correct).toLowerCase()
+      ) {
         score += 1;
       }
     });
 
-    // ===== LISTENING GAP =====
+    // LISTENING GAP
     exam.listeningGaps.forEach(q => {
       total += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
+      if (!user || user.answer == null) return;
 
-      if (user && normalize(user.answer) === normalize(q.correctWord)) {
+      if (
+        user.answer.trim().toLowerCase() ===
+        q.correctWord.trim().toLowerCase()
+      ) {
         score += 1;
       }
     });
@@ -82,21 +98,57 @@ console.log("ANSWERS:", req.body.answers);
       answers,
       score,
       percentage,
-      passed,
-    });
-
-    res.json({
-      score,
-      percentage,
       passed
     });
 
+    res.json({ result: { score, percentage, passed } });
+
   } catch (err) {
-    console.error("SUBMIT EXAM ERROR FULL:", err);
+    console.error("SUBMIT EXAM ERROR:", err);
     res.status(500).json({
       message: "Natija hisoblashda xato",
       error: err.message
     });
   }
-  
+};
+
+
+/* ================= GET EXAM STATS ================= */
+exports.getExamStats = async (req, res) => {
+  try {
+    const { id } = req.params; // examId
+
+    const results = await Result.find({ examId: id });
+
+    if (!results.length) {
+      return res.json({
+        totalAttempts: 0,
+        passed: 0,
+        failed: 0,
+        averageScore: 0
+      });
+    }
+
+    const totalAttempts = results.length;
+    const passed = results.filter(r => r.passed).length;
+    const failed = totalAttempts - passed;
+
+    const averageScore = Math.round(
+      results.reduce((sum, r) => sum + r.percentage, 0) / totalAttempts
+    );
+
+    res.json({
+      totalAttempts,
+      passed,
+      failed,
+      averageScore
+    });
+
+  } catch (err) {
+    console.error("GET EXAM STATS ERROR:", err);
+    res.status(500).json({
+      message: "Statistikani olishda xato",
+      error: err.message
+    });
+  }
 };
