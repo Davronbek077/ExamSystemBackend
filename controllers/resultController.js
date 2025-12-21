@@ -86,7 +86,7 @@ if (exam.reading?.gapQuestions?.length) {
 
     // TENSE
     exam.tenseTransforms?.forEach(t => {
-      t.transforms.forEach(tr => {
+      t.transforms?.forEach(tr => {
         total += tr.points || 1;
         const user = answers.find(a => a.questionId === tr._id.toString());
         if (!user || user.answer == null) return;
@@ -105,11 +105,8 @@ if (exam.reading?.gapQuestions?.length) {
       total += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (!user || user.answer == null) return;
-
-      if (
-        String(user.answer).toLowerCase() ===
-        String(q.correct).toLowerCase()
-      ) {
+    
+      if (String(user.answer) === String(q.correct)) {
         score += 1;
       }
     });
@@ -144,6 +141,8 @@ if (exam.reading?.gapQuestions?.length) {
 
   } catch (err) {
     console.error("SUBMIT EXAM ERROR:", err);
+    console.log("TENSE:", exam.tenseTransforms);
+    console.log("LISTENING:", exam.listeningTF);
     res.status(500).json({
       message: "Natija hisoblashda xato",
       error: err.message
