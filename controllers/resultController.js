@@ -146,3 +146,30 @@ exports.getExamStats = async (req, res) => {
     res.status(500).json({ message: "Statistika xato" });
   }
 };
+
+exports.getGlobalStats = async (req, res) => {
+  try {
+    const total = await Result.countDocuments();
+
+    const passed = await Result.countDocuments({ passed: true });
+
+    const failed = await Result.countDocuments({ passed: false });
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const today = await Result.countDocuments({
+      createdAt: { $gte: todayStart }
+    });
+
+    res.json({
+      total,
+      passed,
+      failed,
+      today
+    });
+  } catch (err) {
+    console.error("STATS ERROR:", err);
+    res.status(500).json({ error: "Statistikani olishda xato" });
+  }
+};
