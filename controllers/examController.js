@@ -89,11 +89,11 @@ exports.updateExam = async (req, res) => {
       title,
       timeLimit,
       passPercentage,
-      questions = [],
-      grammarQuestions = [],
-      tenseTransforms = [],
-      listeningTF = [],
-      listeningGaps = []
+      questions,
+      grammarQuestions,
+      tenseTransforms,
+      listeningTF,
+      listeningGaps
     } = req.body;
 
     const updated = await Exam.findByIdAndUpdate(
@@ -110,7 +110,7 @@ exports.updateExam = async (req, res) => {
       },
       {
         new: true,
-        runValidators: false // MUHIM
+        runValidators: true   // ❗ MUHIM
       }
     );
 
