@@ -34,6 +34,6 @@ router.post("/create", createExam);
 router.get("/all", getAllExams);
 router.get("/:id", getExamById);
 router.delete("/:id", deleteExam);
-router.put("/id", updateExam);
+router.put("/:id", updateExam);
 
 module.exports = router;
