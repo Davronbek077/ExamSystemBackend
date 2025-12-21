@@ -43,6 +43,33 @@ const listeningGapSchema = new mongoose.Schema({
   correctWord: String
 });
 
+const ReadingSchema = new mongoose.Schema({
+  instruction: String,
+  passage: String,
+
+  tfQuestions: [
+    {
+      statement: String,
+      correct: {
+        type: String,
+        enum: ["true", "false", "not_given"]
+      }
+    }
+  ],
+
+  gapQuestions: [
+    {
+      sentence: String,
+      correctWord: String
+    }
+  ],
+
+  pointsPerQuestion: {
+    type: Number,
+    default: 1
+  }
+});
+
 // ===== EXAM =====
 const examSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -54,7 +81,8 @@ const examSchema = new mongoose.Schema({
   tenseTransforms: [tenseTransformSchema],
 
   listeningTF: [listeningTFSchema],
-  listeningGaps: [listeningGapSchema]
+  listeningGaps: [listeningGapSchema],
+  reading: [ReadingSchema]
 
 }, { timestamps: true });
 
