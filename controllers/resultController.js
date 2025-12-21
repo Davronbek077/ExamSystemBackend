@@ -57,7 +57,7 @@ if (exam.reading?.gapQuestions?.length) {
 }
 
     // BASIC
-    exam.questions.forEach(q => {
+    exam.questions?.forEach(q => {
       total += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (!user || user.answer == null) return;
@@ -71,7 +71,7 @@ if (exam.reading?.gapQuestions?.length) {
     });
 
     // GRAMMAR
-    exam.grammarQuestions.forEach(q => {
+    exam.grammarQuestions?.forEach(q => {
       total += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (!user || user.answer == null) return;
@@ -85,7 +85,7 @@ if (exam.reading?.gapQuestions?.length) {
     });
 
     // TENSE
-    exam.tenseTransforms.forEach(t => {
+    exam.tenseTransforms?.forEach(t => {
       t.transforms.forEach(tr => {
         total += tr.points || 1;
         const user = answers.find(a => a.questionId === tr._id.toString());
@@ -101,7 +101,7 @@ if (exam.reading?.gapQuestions?.length) {
     });
 
     // LISTENING TF
-    exam.listeningTF.forEach(q => {
+    exam.listeningTF?.forEach(q => {
       total += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (!user || user.answer == null) return;
@@ -115,7 +115,7 @@ if (exam.reading?.gapQuestions?.length) {
     });
 
     // LISTENING GAP
-    exam.listeningGaps.forEach(q => {
+    exam.listeningGaps?.forEach(q => {
       total += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (!user || user.answer == null) return;
