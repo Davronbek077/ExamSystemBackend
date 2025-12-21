@@ -90,6 +90,8 @@ exports.updateExam = async (req, res) => {
       timeLimit,
       passPercentage,
       questions = [],
+      grammarQuestions = [],
+      tenseTransforms = [],
       listeningTF = [],
       listeningGaps = []
     } = req.body;
@@ -101,6 +103,8 @@ exports.updateExam = async (req, res) => {
         timeLimit,
         passPercentage,
         questions,
+        grammarQuestions,
+        tenseTransforms,
         listeningTF,
         listeningGaps
       },
