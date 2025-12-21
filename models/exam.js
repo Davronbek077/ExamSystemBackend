@@ -82,7 +82,7 @@ const examSchema = new mongoose.Schema({
 
   listeningTF: [listeningTFSchema],
   listeningGaps: [listeningGapSchema],
-  reading: [ReadingSchema]
+  reading: ReadingSchema
 
 }, { timestamps: true });
 
