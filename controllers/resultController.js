@@ -22,6 +22,38 @@ exports.submitExam = async (req, res) => {
     let score = 0;
     let total = 0;
 
+    if (exam.reading?.tfQuestions?.length) {
+      exam.reading.tfQuestions.forEach((q, i) => {
+        total++;
+
+        const userAnswer = answers.find(
+          a => a.questionId === `reading_tf_${i}`
+        )?.answer;
+
+        if (userAnswer === q.correct) {
+          correct++;
+        }
+      });
+    }
+
+    if (exam.reading?.gapQuestions?.length) {
+      exam.reading.gapQuestions.forEach((q, i) => {
+        total++;
+
+        const userAnswer = answers.find(
+          a => a.questionId === `reading_gap_${i}`
+        )?.answer;
+
+        if (
+          userAnswer &&
+          userAnswer.trim().toLowerCase() ===
+          q.correctWord.trim().toLowerCase()
+        ) {
+          correct++;
+        }
+      });
+    }
+
     // BASIC
     exam.questions.forEach(q => {
       total += q.points || 1;
