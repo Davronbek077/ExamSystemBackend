@@ -23,32 +23,35 @@ exports.submitExam = async (req, res) => {
     let total = 0;
 
     // ===== READING TF =====
-    if (exam.reading?.tfQuestions?.length) {
-      exam.reading.tfQuestions.forEach((q, i) => {
-        total += exam.reading.pointsPerQuestion || 1;
-    
-        const userAnswer = answers.find(
-          a => a.questionId === `reading_tf_${i}`
-        )?.answer;
-    
-        if (userAnswer === q.correct) {
-          score += exam.reading.pointsPerQuestion || 1;
-        }
-      });
+if (exam.reading?.tfQuestions?.length) {
+  exam.reading.tfQuestions.forEach(q => {
+    total += exam.reading.pointsPerQuestion || 1;
+
+    const user = answers.find(
+      a => a.questionId === q._id.toString()
+    );
+
+    if (!user || user.answer == null) return;
+
+    if (String(user.answer) === String(q.correct)) {
+      score += exam.reading.pointsPerQuestion || 1;
     }
+  });
+}
 
 // ===== READING GAP =====
 if (exam.reading?.gapQuestions?.length) {
-  exam.reading.gapQuestions.forEach((q, i) => {
+  exam.reading.gapQuestions.forEach(q => {
     total += exam.reading.pointsPerQuestion || 1;
 
-    const userAnswer = answers.find(
-      a => a.questionId === `reading_gap_${i}`
-    )?.answer;
+    const user = answers.find(
+      a => a.questionId === q._id.toString()
+    );
+
+    if (!user || !user.answer) return;
 
     if (
-      userAnswer &&
-      userAnswer.trim().toLowerCase() ===
+      user.answer.trim().toLowerCase() ===
       q.correctWord.trim().toLowerCase()
     ) {
       score += exam.reading.pointsPerQuestion || 1;
@@ -141,8 +144,6 @@ if (exam.reading?.gapQuestions?.length) {
 
   } catch (err) {
     console.error("SUBMIT EXAM ERROR:", err);
-    console.log("TENSE:", exam.tenseTransforms);
-    console.log("LISTENING:", exam.listeningTF);
     res.status(500).json({
       message: "Natija hisoblashda xato",
       error: err.message
