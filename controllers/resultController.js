@@ -23,19 +23,19 @@ exports.submitExam = async (req, res) => {
     let total = 0;
 
     // ===== READING TF =====
-if (exam.reading?.tfQuestions?.length) {
-  exam.reading.tfQuestions.forEach((q, i) => {
-    total += exam.reading.pointsPerQuestion || 1;
-
-    const userAnswer = answers.find(
-      a => a.questionId === `reading_tf_${i}`
-    )?.answer;
-
-    if (userAnswer === q.correct) {
-      score += exam.reading.pointsPerQuestion || 1;
+    if (exam.reading?.tfQuestions?.length) {
+      exam.reading.tfQuestions.forEach((q, i) => {
+        total += exam.reading.pointsPerQuestion || 1;
+    
+        const userAnswer = answers.find(
+          a => a.questionId === `reading_tf_${i}`
+        )?.answer;
+    
+        if (userAnswer === q.correct) {
+          score += exam.reading.pointsPerQuestion || 1;
+        }
+      });
     }
-  });
-}
 
 // ===== READING GAP =====
 if (exam.reading?.gapQuestions?.length) {
