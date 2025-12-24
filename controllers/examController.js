@@ -72,16 +72,23 @@ exports.getExamById = async (req, res) => {
 
 exports.deleteExam = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const exam = await Exam.findByIdAndDelete(id);
-    if (!exam) {
-      return res.status(404).json({message: "Imtihon topilmadi"});
+    await Result.deleteMany({ examId: id });
+
+    const deletedExam = await Exam.findByIdAndDelete(id);
+
+    if (!deletedExam) {
+      return res.status(404).json({ message: "Imtihon topilmadi" });
     }
 
-    res.json({message: "Imtihon o'chirildi"});
+    res.json({
+      success: true,
+      message: "Imtihon va unga tegishli statistikalar o‘chirildi"
+    });
   } catch (err) {
-    res.status(500).json({message: "O'chirishda xato"});
+    console.error("DELETE EXAM ERROR:", err);
+    res.status(500).json({ message: "O‘chirishda xatolik" });
   }
 };
 

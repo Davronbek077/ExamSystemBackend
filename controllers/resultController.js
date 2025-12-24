@@ -207,3 +207,16 @@ exports.getGlobalStats = async (req, res) => {
     res.status(500).json({ error: "Statistikani olishda xato" });
   }
 };
+
+exports.clearExamStats = async (req, res) => {
+  try {
+    await Result.deleteMany({ examId: req.params.examId });
+
+    res.json({
+      success: true,
+      message: "Ushbu imtihon statistikasi o‘chirildi"
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Statistikani o‘chirishda xato" });
+  }
+};
