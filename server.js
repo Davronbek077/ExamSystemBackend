@@ -15,6 +15,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/ping", (req, res) => {
+  res.status(200).json({ok: true});
+});
+
 // ===== ROUTES =====
 app.use("/exams", require("./routes/examRoutes"));
 app.use("/results", require("./routes/resultRoutes"));
