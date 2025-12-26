@@ -5,7 +5,7 @@ const resultSchema = new mongoose.Schema(
     examId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Exam",
-      required: true,
+      required: true
     },
 
     studentName: {
@@ -16,20 +16,52 @@ const resultSchema = new mongoose.Schema(
     answers: [
       {
         questionId: mongoose.Schema.Types.ObjectId,
-        answer: String,
-      },
+        answer: String
+      }
     ],
 
-    writing: {
-      text: String,
-      score: { type: Number, default: null }, // teacher qo‘yadi
-      checked: { type: Boolean, default: false }
+    // AUTO CHECK
+    autoScore: {
+      type: Number,
+      default: 0
     },
-  
-    autoScore: Number,
-    totalScore: Number,
-    percentage: Number,
-    passed: Boolean,
+
+    autoPercentage: {
+      type: Number,
+      default: 0
+    },
+
+    // WRITING
+    writing: {
+      text: {
+        type: String,
+        default: ""
+      },
+      score: {
+        type: Number,
+        default: null
+      },
+      checked: {
+        type: Boolean,
+        default: false
+      }
+    },
+
+    // FINAL RESULT
+    finalScore: {
+      type: Number,
+      default: null
+    },
+
+    finalPercentage: {
+      type: Number,
+      default: null
+    },
+
+    passed: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

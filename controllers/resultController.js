@@ -118,14 +118,23 @@ exports.submitExam = async (req, res) => {
       examId,
       studentName,
       answers,
-      writing: {
-        text: writingText
-      },
+    
+      // AUTO RESULT
       autoScore,
-      totalScore: autoScore,
-      percentage: autoPercentage,
-      passed: false // ❗ Writing tekshirilmagan
-    });
+      autoPercentage,
+    
+      // WRITING
+      writing: {
+        text: writingText,
+        score: null,
+        checked: false
+      },
+    
+      // FINAL (hali yo‘q)
+      finalScore: null,
+      finalPercentage: null,
+      passed: false
+    });    
 
     res.json({
       message: "Imtihon topshirildi",
@@ -159,8 +168,9 @@ exports.getExamStats = async (req, res) => {
       results: results.map(r => ({
         _id: r._id,
         studentName: r.studentName,
-        percentage: r.percentage,
+        percentage: r.finalPercentage ?? r.autoPercentage,
         passed: r.passed,
+        writingChecked: r.writing.checked,
         createdAt: r.createdAt
       }))
     });
@@ -207,5 +217,48 @@ exports.clearExamStats = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Statistikani o‘chirishda xato" });
+  }
+};
+
+exports.checkWriting = async (req, res) => {
+  try {
+    const {resultId} = req.params;
+    const {writingScore} = req.body;
+
+    const result = await Result.findById(resultId).populate("examId");
+    if (!result) {
+      return res.status(404).json({message: "Natija topilmadi"});
+    }
+
+    const writingPoints = result.examId.writingTask?.points || 0;
+
+    if (writingScore < 0 || writingScore > writingPoints) {
+      return res.status(400).json({message: "Noto'g'ri writing bali"});
+    }
+
+    const finalScore = result.autoScore + writingScore;
+
+    const totalPoints = result.autoScore + writingPoints;
+
+    const finalPercentage = totalPoints === 0 ? 0 : Math.round((finalScore / totalPoints) * 100);
+
+    const passed = finalPercentage >= result.examId.passPercentage;
+
+    result.writing.score = writingScore;
+    result.writing.checked = true;
+
+    result.finalScore = finalScore;
+    result. finalPercentage = finalPercentage;
+    result.passed = passed;
+
+    await result.save();
+
+    res.json({
+      message: "Writing tekshirildi",
+      result
+    });
+  } catch (err) {
+    console.error("CHECK WRITING ERROR:", err);
+    res.status(500).json({message: "Writing tekshirishda xato"});
   }
 };
