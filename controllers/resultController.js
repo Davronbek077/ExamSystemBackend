@@ -262,3 +262,36 @@ exports.checkWriting = async (req, res) => {
     res.status(500).json({message: "Writing tekshirishda xato"});
   }
 };
+
+/* ================= GET ALL WRITINGS ================= */
+exports.getAllWritings = async (req, res) => {
+  try {
+    const results = await Result.find({
+      "writing.text": { $ne: "" }
+    })
+      .populate("examId", "title writingTask")
+      .sort({ createdAt: -1 });
+
+    res.json(results);
+  } catch (err) {
+    console.error("GET WRITINGS ERROR:", err);
+    res.status(500).json({ message: "Writinglarni olishda xato" });
+  }
+};
+
+/* ================= GET SINGLE WRITING ================= */
+exports.getSingleWriting = async (req, res) => {
+  try {
+    const result = await Result.findById(req.params.id)
+      .populate("examId", "title writingTask passPercentage");
+
+    if (!result) {
+      return res.status(404).json({ message: "Writing topilmadi" });
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error("GET SINGLE WRITING ERROR:", err);
+    res.status(500).json({ message: "Writingni olishda xato" });
+  }
+};
