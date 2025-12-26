@@ -4,14 +4,15 @@ const Result = require("../models/result");
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
   try {
-    const { examId, answers = [], studentName } = req.body;
+    const {
+      examId,
+      answers = [],
+      studentName,
+      writingText = ""
+    } = req.body;
 
     if (!studentName) {
-      return res.status(400).json({message: "Ism kiritilmagan"});
-    }
-
-    if (!examId) {
-      return res.status(400).json({ message: "examId yo‘q" });
+      return res.status(400).json({ message: "Ism kiritilmagan" });
     }
 
     const exam = await Exam.findById(examId);
@@ -19,135 +20,123 @@ exports.submitExam = async (req, res) => {
       return res.status(404).json({ message: "Imtihon topilmadi" });
     }
 
-    let score = 0;
-    let total = 0;
+    let autoScore = 0;
+    let autoTotal = 0;
 
-    // ===== READING TF =====
-if (exam.reading?.tfQuestions?.length) {
-  exam.reading.tfQuestions.forEach(q => {
-    total += exam.reading.pointsPerQuestion || 1;
-
-    const user = answers.find(
-      a => a.questionId === q._id.toString()
-    );
-
-    if (!user || user.answer == null) return;
-
-    if (String(user.answer) === String(q.correct)) {
-      score += exam.reading.pointsPerQuestion || 1;
+    // ================= READING =================
+    if (exam.reading?.tfQuestions?.length) {
+      exam.reading.tfQuestions.forEach(q => {
+        autoTotal += exam.reading.pointsPerQuestion || 1;
+        const user = answers.find(a => a.questionId === q._id.toString());
+        if (user && String(user.answer) === String(q.correct)) {
+          autoScore += exam.reading.pointsPerQuestion || 1;
+        }
+      });
     }
-  });
-}
 
-// ===== READING GAP =====
-if (exam.reading?.gapQuestions?.length) {
-  exam.reading.gapQuestions.forEach(q => {
-    total += exam.reading.pointsPerQuestion || 1;
-
-    const user = answers.find(
-      a => a.questionId === q._id.toString()
-    );
-
-    if (!user || !user.answer) return;
-
-    if (
-      user.answer.trim().toLowerCase() ===
-      q.correctWord.trim().toLowerCase()
-    ) {
-      score += exam.reading.pointsPerQuestion || 1;
+    if (exam.reading?.gapQuestions?.length) {
+      exam.reading.gapQuestions.forEach(q => {
+        autoTotal += exam.reading.pointsPerQuestion || 1;
+        const user = answers.find(a => a.questionId === q._id.toString());
+        if (
+          user &&
+          user.answer?.trim().toLowerCase() ===
+          q.correctWord.trim().toLowerCase()
+        ) {
+          autoScore += exam.reading.pointsPerQuestion || 1;
+        }
+      });
     }
-  });
-}
 
-    // BASIC
+    // ================= BASIC =================
     exam.questions?.forEach(q => {
-      total += q.points || 1;
+      autoTotal += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (!user || user.answer == null) return;
-
       if (
+        user &&
         String(user.answer).trim().toLowerCase() ===
         String(q.correctAnswer).trim().toLowerCase()
       ) {
-        score += q.points || 1;
+        autoScore += q.points || 1;
       }
     });
 
-    // GRAMMAR
+    // ================= GRAMMAR =================
     exam.grammarQuestions?.forEach(q => {
-      total += q.points || 1;
+      autoTotal += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (!user || user.answer == null) return;
-
       if (
+        user &&
         user.answer.trim().toLowerCase() ===
         q.correctSentence.trim().toLowerCase()
       ) {
-        score += q.points || 1;
+        autoScore += q.points || 1;
       }
     });
 
-    // TENSE
+    // ================= TENSE =================
     exam.tenseTransforms?.forEach(t => {
       t.transforms?.forEach(tr => {
-        total += tr.points || 1;
+        autoTotal += tr.points || 1;
         const user = answers.find(a => a.questionId === tr._id.toString());
-        if (!user || user.answer == null) return;
-
         if (
+          user &&
           user.answer.trim().toLowerCase() ===
           tr.correctSentence.trim().toLowerCase()
         ) {
-          score += tr.points || 1;
+          autoScore += tr.points || 1;
         }
       });
     });
 
-    // LISTENING TF
+    // ================= LISTENING =================
     exam.listeningTF?.forEach(q => {
-      total += 1;
+      autoTotal += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (!user || user.answer == null) return;
-    
-      if (String(user.answer) === String(q.correct)) {
-        score += 1;
+      if (user && String(user.answer) === String(q.correct)) {
+        autoScore += 1;
       }
     });
 
-    // LISTENING GAP
     exam.listeningGaps?.forEach(q => {
-      total += 1;
+      autoTotal += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (!user || user.answer == null) return;
-
       if (
+        user &&
         user.answer.trim().toLowerCase() ===
         q.correctWord.trim().toLowerCase()
       ) {
-        score += 1;
+        autoScore += 1;
       }
     });
 
-    const percentage = total === 0 ? 0 : Math.round((score / total) * 100);
-    const passed = percentage >= exam.passPercentage;
+    const autoPercentage =
+      autoTotal === 0 ? 0 : Math.round((autoScore / autoTotal) * 100);
 
+    // ================= SAVE RESULT =================
     await Result.create({
       examId,
       studentName,
       answers,
-      score,
-      percentage,
-      passed
+      writing: {
+        text: writingText
+      },
+      autoScore,
+      totalScore: autoScore,
+      percentage: autoPercentage,
+      passed: false // ❗ Writing tekshirilmagan
     });
 
-    res.json({ result: { score, percentage, passed, studentName } });
+    res.json({
+      message: "Imtihon topshirildi",
+      autoScore,
+      autoPercentage,
+      writingPending: true
+    });
 
   } catch (err) {
     console.error("SUBMIT EXAM ERROR:", err);
-    res.status(500).json({
-      message: "Natija hisoblashda xato",
-      error: err.message
-    });
+    res.status(500).json({ message: "Xatolik", error: err.message });
   }
 };
 

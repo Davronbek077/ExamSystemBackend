@@ -70,6 +70,34 @@ const ReadingSchema = new mongoose.Schema({
   }
 });
 
+const translateSchema = new mongoose.Schema({
+  word: String,
+  correctAnswer: String,
+  points: {type: Number, default: 1}
+});
+
+const completeSchema = new mongoose.Schema({
+  wordsBox: [String],
+  sentence: String,
+  correctWord: String,
+  points: {type: Number, default: 1}
+});
+
+const correctionSchema = new mongoose.Schema({
+  wrongSentence: String,
+  correctSentence: String,
+  points: { type: Number, default: 1 }
+});
+
+const writingSchema = new mongoose.Schema({
+  title: String,
+  instruction: String,
+  minWords: Number,
+  maxWords: Number,
+  points: Number
+});
+
+
 // ===== EXAM =====
 const examSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -82,7 +110,12 @@ const examSchema = new mongoose.Schema({
 
   listeningTF: [listeningTFSchema],
   listeningGaps: [listeningGapSchema],
-  reading: ReadingSchema
+  reading: ReadingSchema,
+
+  translateQuestions: [translateSchema],
+  completeQuestions: [completeSchema],
+  correctionQuestions: [correctionSchema],
+  writingTask: writingSchema
 
 }, { timestamps: true });
 

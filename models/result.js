@@ -19,7 +19,15 @@ const resultSchema = new mongoose.Schema(
         answer: String,
       },
     ],
-    score: Number,
+
+    writing: {
+      text: String,
+      score: { type: Number, default: null }, // teacher qo‘yadi
+      checked: { type: Boolean, default: false }
+    },
+  
+    autoScore: Number,
+    totalScore: Number,
     percentage: Number,
     passed: Boolean,
   },
