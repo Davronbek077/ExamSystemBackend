@@ -63,9 +63,10 @@ const resultSchema = new mongoose.Schema(
       default: 0
     },
 
-    passed: {
-      type: Boolean,
-      default: false
+    status: {
+      type: String,
+      enum: ["pending", "passed", "failed"],
+      default: "pending"
     }
   },
   { timestamps: true }

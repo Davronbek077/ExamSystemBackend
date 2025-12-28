@@ -113,7 +113,11 @@ exports.submitExam = async (req, res) => {
     const autoPercentage =
       autoMaxScore === 0 ? 0 : Math.round((autoScore / autoMaxScore) * 100);
 
-      const passed = !exam.writingTask && autoPercentage >= exam.passPercentage;
+      let status = "pending";
+
+       if (!exam.writingTask) {
+         status = autoPercentage >= exam.passPercentage ? "passed" : "failed";
+      }
 
     // ================= SAVE RESULT =================
     await Result.create({
@@ -136,7 +140,7 @@ exports.submitExam = async (req, res) => {
       // FINAL (hali yo‘q)
       finalScore: null,
       finalPercentage: null,
-      passed
+      status
     });    
 
     res.json({
@@ -161,18 +165,20 @@ exports.getExamStats = async (req, res) => {
     const results = await Result.find({ examId }).sort({ createdAt: -1 });
 
     const total = results.length;
-    const passed = results.filter(r => r.passed).length;
-    const failed = total - passed;
+    const passed = results.filter(r => r.status === "passed").length;
+    const failed = results.filter(r => r.status === "failed").length;
+    const pending = results.filter(r => r.status === "pending").length;
 
     res.json({
       total,
       passed,
       failed,
+      pending,
       results: results.map(r => ({
         _id: r._id,
         studentName: r.studentName,
         percentage: r.finalPercentage ?? r.autoPercentage,
-        passed: r.passed,
+        status: r.status,
         writingChecked: r.writing.checked,
         createdAt: r.createdAt
       }))
@@ -187,9 +193,9 @@ exports.getGlobalStats = async (req, res) => {
   try {
     const total = await Result.countDocuments();
 
-    const passed = await Result.countDocuments({ passed: true });
-
-    const failed = await Result.countDocuments({ passed: false });
+    const passed = await Result.countDocuments({status: "passed"});
+    const failed = await Result.countDocuments({status: "failed"});
+    const pending = await Result.countDocuments({status: "pending"});
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -202,6 +208,7 @@ exports.getGlobalStats = async (req, res) => {
       total,
       passed,
       failed,
+      pending,
       today
     });
   } catch (err) {
@@ -245,14 +252,14 @@ exports.checkWriting = async (req, res) => {
 
     const finalPercentage = totalPoints === 0 ? 0 : Math.round((finalScore / totalPoints) * 100);
 
-    const passed = finalPercentage >= result.examId.passPercentage;
+    const status = finalPercentage >= result.examId.passPercentage ? "passed" : "failed";
 
     result.writing.score = writingScore;
     result.writing.checked = true;
 
     result.finalScore = finalScore;
     result. finalPercentage = finalPercentage;
-    result.passed = passed;
+    result.status = status;
 
     await result.save();
 
