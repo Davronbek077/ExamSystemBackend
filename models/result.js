@@ -58,6 +58,11 @@ const resultSchema = new mongoose.Schema(
       default: null
     },
 
+    autoMaxScore: {
+      type: Number,
+      default: 0
+    },
+
     passed: {
       type: Boolean,
       default: false

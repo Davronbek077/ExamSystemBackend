@@ -21,12 +21,12 @@ exports.submitExam = async (req, res) => {
     }
 
     let autoScore = 0;
-    let autoTotal = 0;
+    let autoMaxScore = 0;
 
     // ================= READING =================
     if (exam.reading?.tfQuestions?.length) {
       exam.reading.tfQuestions.forEach(q => {
-        autoTotal += exam.reading.pointsPerQuestion || 1;
+        autoMaxScore += exam.reading.pointsPerQuestion || 1;
         const user = answers.find(a => a.questionId === q._id.toString());
         if (user && String(user.answer) === String(q.correct)) {
           autoScore += exam.reading.pointsPerQuestion || 1;
@@ -36,7 +36,7 @@ exports.submitExam = async (req, res) => {
 
     if (exam.reading?.gapQuestions?.length) {
       exam.reading.gapQuestions.forEach(q => {
-        autoTotal += exam.reading.pointsPerQuestion || 1;
+        autoMaxScore += exam.reading.pointsPerQuestion || 1;
         const user = answers.find(a => a.questionId === q._id.toString());
         if (
           user &&
@@ -50,7 +50,7 @@ exports.submitExam = async (req, res) => {
 
     // ================= BASIC =================
     exam.questions?.forEach(q => {
-      autoTotal += q.points || 1;
+      autoMaxScore += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (
         user &&
@@ -63,7 +63,7 @@ exports.submitExam = async (req, res) => {
 
     // ================= GRAMMAR =================
     exam.grammarQuestions?.forEach(q => {
-      autoTotal += q.points || 1;
+      autoMaxScore += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (
         user &&
@@ -77,7 +77,7 @@ exports.submitExam = async (req, res) => {
     // ================= TENSE =================
     exam.tenseTransforms?.forEach(t => {
       t.transforms?.forEach(tr => {
-        autoTotal += tr.points || 1;
+        autoMaxScore += tr.points || 1;
         const user = answers.find(a => a.questionId === tr._id.toString());
         if (
           user &&
@@ -91,7 +91,7 @@ exports.submitExam = async (req, res) => {
 
     // ================= LISTENING =================
     exam.listeningTF?.forEach(q => {
-      autoTotal += 1;
+      autoMaxScore += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (user && String(user.answer) === String(q.correct)) {
         autoScore += 1;
@@ -99,7 +99,7 @@ exports.submitExam = async (req, res) => {
     });
 
     exam.listeningGaps?.forEach(q => {
-      autoTotal += 1;
+      autoMaxScore += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
       if (
         user &&
@@ -111,7 +111,9 @@ exports.submitExam = async (req, res) => {
     });
 
     const autoPercentage =
-      autoTotal === 0 ? 0 : Math.round((autoScore / autoTotal) * 100);
+      autoMaxScore === 0 ? 0 : Math.round((autoScore / autoMaxScore) * 100);
+
+      const passed = !exam.writingTask && autoPercentage >= exam.passPercentage;
 
     // ================= SAVE RESULT =================
     await Result.create({
@@ -121,6 +123,7 @@ exports.submitExam = async (req, res) => {
     
       // AUTO RESULT
       autoScore,
+      autoMaxScore,
       autoPercentage,
     
       // WRITING
@@ -133,7 +136,7 @@ exports.submitExam = async (req, res) => {
       // FINAL (hali yo‘q)
       finalScore: null,
       finalPercentage: null,
-      passed: false
+      passed
     });    
 
     res.json({
@@ -238,7 +241,7 @@ exports.checkWriting = async (req, res) => {
 
     const finalScore = result.autoScore + writingScore;
 
-    const totalPoints = result.autoScore + writingPoints;
+    const totalPoints = result.autoMaxScore + writingPoints;
 
     const finalPercentage = totalPoints === 0 ? 0 : Math.round((finalScore / totalPoints) * 100);
 
