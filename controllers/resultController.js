@@ -1,6 +1,10 @@
 const Exam = require("../models/exam");
 const Result = require("../models/result");
 
+/* ===== HELPER ===== */
+const normalize = (v) =>
+  String(v ?? "").trim().toLowerCase();
+
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
   try {
@@ -23,12 +27,12 @@ exports.submitExam = async (req, res) => {
     let autoScore = 0;
     let autoMaxScore = 0;
 
-    // ================= READING =================
+    /* ================= READING ================= */
     if (exam.reading?.tfQuestions?.length) {
       exam.reading.tfQuestions.forEach(q => {
         autoMaxScore += exam.reading.pointsPerQuestion || 1;
         const user = answers.find(a => a.questionId === q._id.toString());
-        if (user && String(user.answer) === String(q.correct)) {
+        if (user && normalize(user.answer) === normalize(q.correct)) {
           autoScore += exam.reading.pointsPerQuestion || 1;
         }
       });
@@ -38,62 +42,46 @@ exports.submitExam = async (req, res) => {
       exam.reading.gapQuestions.forEach(q => {
         autoMaxScore += exam.reading.pointsPerQuestion || 1;
         const user = answers.find(a => a.questionId === q._id.toString());
-        if (
-          user &&
-          user.answer?.trim().toLowerCase() ===
-          q.correctWord.trim().toLowerCase()
-        ) {
+        if (user && normalize(user.answer) === normalize(q.correctWord)) {
           autoScore += exam.reading.pointsPerQuestion || 1;
         }
       });
     }
 
-    // ================= BASIC =================
+    /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
       autoMaxScore += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (
-        user &&
-        String(user.answer).trim().toLowerCase() ===
-        String(q.correctAnswer).trim().toLowerCase()
-      ) {
+      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
         autoScore += q.points || 1;
       }
     });
 
-    // ================= GRAMMAR =================
+    /* ================= GRAMMAR ================= */
     exam.grammarQuestions?.forEach(q => {
       autoMaxScore += q.points || 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (
-        user &&
-        user.answer.trim().toLowerCase() ===
-        q.correctSentence.trim().toLowerCase()
-      ) {
+      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
         autoScore += q.points || 1;
       }
     });
 
-    // ================= TENSE =================
+    /* ================= TENSE ================= */
     exam.tenseTransforms?.forEach(t => {
       t.transforms?.forEach(tr => {
         autoMaxScore += tr.points || 1;
         const user = answers.find(a => a.questionId === tr._id.toString());
-        if (
-          user &&
-          user.answer.trim().toLowerCase() ===
-          tr.correctSentence.trim().toLowerCase()
-        ) {
+        if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
           autoScore += tr.points || 1;
         }
       });
     });
 
-    // ================= LISTENING =================
+    /* ================= LISTENING ================= */
     exam.listeningTF?.forEach(q => {
       autoMaxScore += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && String(user.answer) === String(q.correct)) {
+      if (user && normalize(user.answer) === normalize(q.correct)) {
         autoScore += 1;
       }
     });
@@ -101,61 +89,58 @@ exports.submitExam = async (req, res) => {
     exam.listeningGaps?.forEach(q => {
       autoMaxScore += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (
-        user &&
-        user.answer.trim().toLowerCase() ===
-        q.correctWord.trim().toLowerCase()
-      ) {
+      if (user && normalize(user.answer) === normalize(q.correctWord)) {
         autoScore += 1;
       }
     });
 
+    /* ================= FINAL AUTO RESULT ================= */
     const autoPercentage =
-      autoMaxScore === 0 ? 0 : Math.round((autoScore / autoMaxScore) * 100);
+      autoMaxScore === 0
+        ? 0
+        : Math.round((autoScore / autoMaxScore) * 100);
 
-      let status = "pending";
+    let status = "pending";
+    if (!exam.writingTask) {
+      status = autoPercentage >= exam.passPercentage ? "passed" : "failed";
+    }
 
-       if (!exam.writingTask) {
-         status = autoPercentage >= exam.passPercentage ? "passed" : "failed";
-      }
-
-    // ================= SAVE RESULT =================
+    /* ================= SAVE RESULT ================= */
     await Result.create({
       examId,
       studentName,
       answers,
-    
-      // AUTO RESULT
+
       autoScore,
       autoMaxScore,
       autoPercentage,
-    
-      // WRITING
+
       writing: {
         text: writingText,
         score: null,
         checked: false
       },
-    
-      // FINAL (hali yo‘q)
+
       finalScore: null,
       finalPercentage: null,
       status
-    });    
+    });
 
     res.json({
       message: "Imtihon topshirildi",
       autoScore,
       autoPercentage,
-      writingPending: true
+      writingPending: !!exam.writingTask
     });
 
   } catch (err) {
     console.error("SUBMIT EXAM ERROR:", err);
-    res.status(500).json({ message: "Xatolik", error: err.message });
+    res.status(500).json({
+      message: "Xatolik",
+      error: err.message
+    });
   }
 };
-
 
 /* ================= GET EXAM STATS ================= */
 exports.getExamStats = async (req, res) => {
