@@ -180,6 +180,7 @@ exports.getExamStats = async (req, res) => {
         percentage: r.finalPercentage ?? r.autoPercentage,
         status: r.status,
         writingChecked: r.writing.checked,
+        writingScore: r.writing.score,
         createdAt: r.createdAt
       }))
     });
