@@ -162,7 +162,7 @@ exports.getExamStats = async (req, res) => {
   try {
     const examId = req.params.id;
 
-    const results = await Result.find({ examId }).sort({ createdAt: -1 });
+    const results = await Result.find({ examId }).populate("examId", "writingTask").sort({ createdAt: -1 });
 
     const total = results.length;
     const passed = results.filter(r => r.status === "passed").length;
@@ -181,6 +181,7 @@ exports.getExamStats = async (req, res) => {
         status: r.status,
         writingChecked: r.writing.checked,
         writingScore: r.writing.score,
+        writingMax: r.examId?.writingTask?.points || 0,
         createdAt: r.createdAt
       }))
     });
