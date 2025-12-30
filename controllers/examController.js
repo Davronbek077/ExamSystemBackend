@@ -17,7 +17,10 @@ exports.createExam = async (req, res) => {
       listeningTF = [],
       listeningGaps = [],
       reading = {},
-      writingTask = null
+      writingTask = null,
+      translateQuestions = [],
+      completeQuestions = [],
+      correctionQuestions = []
     } = req.body;
 
     if (!title) {
@@ -34,7 +37,10 @@ exports.createExam = async (req, res) => {
       listeningTF,
       listeningGaps,
       reading,
-      writingTask
+      writingTask,
+      translateQuestions,
+      completeQuestions,
+      correctionQuestions
     });
 
     res.status(201).json({ success: true, exam });
@@ -106,7 +112,10 @@ exports.updateExam = async (req, res) => {
       listeningTF,
       listeningGaps,
       reading,
-      writingTask
+      writingTask,
+      translateQuestions = [],
+      completeQuestions = [],
+      correctionQuestions = []
     } = req.body;
 
     const updated = await Exam.findByIdAndUpdate(
@@ -121,7 +130,10 @@ exports.updateExam = async (req, res) => {
         listeningTF,
         listeningGaps,
         reading,
-        writingTask
+        writingTask,
+        translateQuestions,
+        completeQuestions,
+        correctionQuestions
       },
       {
         new: true,

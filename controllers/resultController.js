@@ -94,6 +94,30 @@ exports.submitExam = async (req, res) => {
       }
     });
 
+    exam.translateQuestions?.forEach(q => {
+      autoMaxScore += q.points || 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        autoScore += q.points || 1;
+      }
+    });
+
+    exam.completeQuestions?.forEach(q => {
+      autoMaxScore += q.points || 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+      if (user && normalize(user.answer) === normalize(q.correctWord)) {
+        autoScore += q.points || 1;
+      }
+    });
+
+    exam.correctionQuestions?.forEach(q => {
+      autoMaxScore += q.points || 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
+        autoScore += q.points || 1;
+      }
+    });
+
     /* ================= FINAL AUTO RESULT ================= */
     const autoPercentage =
       autoMaxScore === 0
@@ -245,7 +269,7 @@ exports.checkWriting = async (req, res) => {
     result.writing.checked = true;
 
     result.finalScore = finalScore;
-    result. finalPercentage = finalPercentage;
+    result.finalPercentage = finalPercentage;
     result.status = status;
 
     await result.save();
