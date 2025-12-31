@@ -76,11 +76,18 @@ const translateSchema = new mongoose.Schema({
   points: {type: Number, default: 1}
 });
 
+const completeSentenceSchema = new mongoose.Schema({
+  text: String,
+  correctWord: String
+});
+
 const completeSchema = new mongoose.Schema({
-  wordsBox: [String],
-  sentence: String,
-  correctWord: String,
-  points: {type: Number, default: 1}
+  wordBank: [String],
+  sentences: [completeSentenceSchema],
+  pointsPerSentence: {
+    type: Number,
+    default: 1
+  }
 });
 
 const correctionSchema = new mongoose.Schema({

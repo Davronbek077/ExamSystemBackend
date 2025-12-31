@@ -102,12 +102,20 @@ exports.submitExam = async (req, res) => {
       }
     });
 
-    exam.completeQuestions?.forEach(q => {
-      autoMaxScore += q.points || 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correctWord)) {
-        autoScore += q.points || 1;
-      }
+    exam.completeQuestions?.forEach(block => {
+      const pts = block.pointsPerSentence || 1;
+
+      block.sentences.forEach(sentence => {
+        autoMaxScore += pts;
+
+        const user = answers.find(a => a.questionId === sentence._id.toString());
+
+        if (user &&
+          normalize(user.answer) === normalize(sentence.correctWord)
+        ) {
+          autoScore += pts;
+        }
+      });
     });
 
     exam.correctionQuestions?.forEach(q => {
