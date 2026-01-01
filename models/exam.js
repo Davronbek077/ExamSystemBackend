@@ -64,6 +64,14 @@ const ReadingSchema = new mongoose.Schema({
     }
   ],
 
+  shortAnswerQuestions: [   // 🔥 YANGI
+    {
+      question: String,
+      keywords: [String],
+      maxPoints: Number
+    }
+  ],
+
   pointsPerQuestion: {
     type: Number,
     default: 1

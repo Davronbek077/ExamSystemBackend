@@ -24,6 +24,24 @@ exports.submitExam = async (req, res) => {
       return res.status(404).json({ message: "Imtihon topilmadi" });
     }
 
+    const checkShortAnswer = (userAnswer, keywords = []) => {
+      if (!userAnswer || keywords.length === 0) return 0;
+    
+      const answer = normalize(userAnswer);
+    
+      let matched = 0;
+    
+      keywords.forEach(k => {
+        if (answer.includes(normalize(k))) {
+          matched++;
+        }
+      });
+    
+      if (matched === keywords.length) return 2; // 100%
+      if (matched >= Math.ceil(keywords.length / 2)) return 1; // ≥50%
+      return 0;
+    };       
+
     let autoScore = 0;
     let autoMaxScore = 0;
 
@@ -47,6 +65,25 @@ exports.submitExam = async (req, res) => {
         }
       });
     }
+
+    /* ===== READING SHORT ANSWER ===== */
+if (exam.reading?.shortAnswerQuestions?.length) {
+  exam.reading.shortAnswerQuestions.forEach(q => {
+    autoMaxScore += 2; // ❗ har bir short answer max 2 ball
+
+    const user = answers.find(
+      a => a.questionId === q._id.toString()
+    );
+
+    if (user && user.answer) {
+      autoScore += checkShortAnswer(
+        user.answer,
+        q.keywords || []
+      );
+    }
+  });
+}
+
 
     /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
