@@ -67,23 +67,25 @@ exports.submitExam = async (req, res) => {
     }
 
     /* ===== READING SHORT ANSWER ===== */
-if (exam.reading?.shortAnswerQuestions?.length) {
-  exam.reading.shortAnswerQuestions.forEach(q => {
-    autoMaxScore += 2; // ❗ har bir short answer max 2 ball
-
-    const user = answers.find(
-      a => a.questionId === q._id.toString()
-    );
-
-    if (user && user.answer) {
-      autoScore += checkShortAnswer(
-        user.answer,
-        q.keywords || []
-      );
+    if (exam.reading?.shortAnswerQuestions?.length) {
+      exam.reading.shortAnswerQuestions.forEach(q => {
+        const max = q.maxPoints || 2;
+        autoMaxScore += max;
+    
+        const user = answers.find(
+          a => a.questionId === q._id.toString()
+        );
+    
+        if (user && user.answer) {
+          const score = checkShortAnswer(
+            user.answer,
+            q.keywords || []
+          );
+    
+          autoScore += Math.min(score, max);
+        }
+      });
     }
-  });
-}
-
 
     /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
@@ -118,10 +120,10 @@ if (exam.reading?.shortAnswerQuestions?.length) {
     exam.listeningTF?.forEach(q => {
       autoMaxScore += 1;
       const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correct)) {
+      const correct = q.correct === true ? "true" : "false";
+      if (user && normalize(user.answer) === correct) {
         autoScore += 1;
-      }
-    });
+      }});
 
     exam.listeningGaps?.forEach(q => {
       autoMaxScore += 1;
