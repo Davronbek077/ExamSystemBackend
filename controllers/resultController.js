@@ -141,6 +141,31 @@ exports.submitExam = async (req, res) => {
       }
     });
 
+    // SENTENCE BUILD SCORING
+exam.sentenceBuildQuestions.forEach((q, i) => {
+  const user = answers.sentenceBuildAnswers?.[i];
+  if (!user) return;
+
+  let score = 0;
+
+  const normalize = (str = "") =>
+    str.trim().toLowerCase().replace(/\s+/g, " ");
+
+  if (normalize(user.affirmative) === normalize(q.affirmative)) {
+    score += 1;
+  }
+
+  if (normalize(user.negative) === normalize(q.negative)) {
+    score += 1;
+  }
+
+  if (normalize(user.question) === normalize(q.question)) {
+    score += 1;
+  }
+
+  totalScore += score;
+});
+
     exam.completeQuestions?.forEach(block => {
       const pts = block.pointsPerSentence || 1;
 
