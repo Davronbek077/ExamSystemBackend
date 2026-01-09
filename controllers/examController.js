@@ -106,38 +106,52 @@ exports.updateExam = async (req, res) => {
       title,
       timeLimit,
       passPercentage,
-      questions,
-      grammarQuestions,
-      tenseTransforms,
-      listeningTF,
-      listeningGaps,
-      reading,
-      writingTask,
+
+      questions = [],
+      grammarQuestions = [],
+      tenseTransforms = [],
+
+      listeningTF = [],
+      listeningGaps = [],
+      reading = {},
+
+      writingTask = null,
+
       translateQuestions = [],
       completeQuestions = [],
       correctionQuestions = []
     } = req.body;
 
+    // 🔍 DIAGNOSTIKA (SHART)
+    console.log("UPDATE QUESTIONS:", questions);
+    console.log("UPDATE TRANSLATE:", translateQuestions);
+
     const updated = await Exam.findByIdAndUpdate(
       req.params.id,
       {
-        title,
-        timeLimit,
-        passPercentage,
-        questions,
-        grammarQuestions,
-        tenseTransforms,
-        listeningTF,
-        listeningGaps,
-        reading,
-        writingTask,
-        translateQuestions,
-        completeQuestions,
-        correctionQuestions
+        $set: {
+          title,
+          timeLimit,
+          passPercentage,
+
+          questions,
+          grammarQuestions,
+          tenseTransforms,
+
+          listeningTF,
+          listeningGaps,
+          reading,
+
+          writingTask,
+
+          translateQuestions,
+          completeQuestions,
+          correctionQuestions
+        }
       },
       {
         new: true,
-        runValidators: true   // ❗ MUHIM
+        runValidators: true
       }
     );
 
