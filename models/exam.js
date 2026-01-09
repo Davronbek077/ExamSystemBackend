@@ -98,6 +98,29 @@ const completeSchema = new mongoose.Schema({
   }
 });
 
+const sentenceBuildQuestions = new mongoose.Schema({
+  words: {
+    type: [String],
+    required: true
+  },
+  affirmative: {
+    type: String,
+    required: true
+  },
+  negative: {
+    type: String,
+    required: true
+  },
+  question: {
+    type: String,
+    required: true
+  },
+  points: {
+    type: Number,
+    default: 3
+  }
+});
+
 const correctionSchema = new mongoose.Schema({
   wrongSentence: String,
   correctSentence: String,
@@ -130,6 +153,7 @@ const examSchema = new mongoose.Schema({
   translateQuestions: [translateSchema],
   completeQuestions: [completeSchema],
   correctionQuestions: [correctionSchema],
+  sentenceBuildQuestions: [sentenceBuildQuestions],
   writingTask: writingSchema
 
 }, { timestamps: true });

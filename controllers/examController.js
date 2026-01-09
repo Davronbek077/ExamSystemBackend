@@ -20,7 +20,8 @@ exports.createExam = async (req, res) => {
       writingTask = null,
       translateQuestions = [],
       completeQuestions = [],
-      correctionQuestions = []
+      correctionQuestions = [],
+      sentenceBuildQuestions,
     } = req.body;
 
     if (!title) {
@@ -40,7 +41,8 @@ exports.createExam = async (req, res) => {
       writingTask,
       translateQuestions,
       completeQuestions,
-      correctionQuestions
+      correctionQuestions,
+      sentenceBuildQuestions
     });
 
     res.status(201).json({ success: true, exam });
@@ -119,12 +121,14 @@ exports.updateExam = async (req, res) => {
 
       translateQuestions = [],
       completeQuestions = [],
-      correctionQuestions = []
+      correctionQuestions = [],
+      sentenceBuildQuestions = []
     } = req.body;
 
     // 🔍 DIAGNOSTIKA (SHART)
     console.log("UPDATE QUESTIONS:", questions);
     console.log("UPDATE TRANSLATE:", translateQuestions);
+    console.log("EXAM FROM BACKEND:", exam.sentenceBuildQuestions);
 
     const updated = await Exam.findByIdAndUpdate(
       req.params.id,
@@ -146,7 +150,8 @@ exports.updateExam = async (req, res) => {
 
           translateQuestions,
           completeQuestions,
-          correctionQuestions
+          correctionQuestions,
+          sentenceBuildQuestions
         }
       },
       {
