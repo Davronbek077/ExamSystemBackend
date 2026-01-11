@@ -141,29 +141,26 @@ exports.submitExam = async (req, res) => {
       }
     });
 
-    // SENTENCE BUILD SCORING
-exam.sentenceBuildQuestions.forEach((q, i) => {
-  const user = answers.sentenceBuildAnswers?.[i];
+// ================= SENTENCE BUILD =================
+exam.sentenceBuildQuestions?.forEach(q => {
+  autoMaxScore += q.points || 3;
+
+  const user = req.body.sentenceBuildAnswers?.find(
+    a => a.questionId === q._id.toString()
+  );
+
   if (!user) return;
 
   let score = 0;
 
-  const normalize = (str = "") =>
-    str.trim().toLowerCase().replace(/\s+/g, " ");
+  const norm = v =>
+    String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
 
-  if (normalize(user.affirmative) === normalize(q.affirmative)) {
-    score += 1;
-  }
+  if (norm(user.affirmative) === norm(q.affirmative)) score += 1;
+  if (norm(user.negative) === norm(q.negative)) score += 1;
+  if (norm(user.question) === norm(q.question)) score += 1;
 
-  if (normalize(user.negative) === normalize(q.negative)) {
-    score += 1;
-  }
-
-  if (normalize(user.question) === normalize(q.question)) {
-    score += 1;
-  }
-
-  totalScore += score;
+  autoScore += score;
 });
 
     exam.completeQuestions?.forEach(block => {
@@ -206,6 +203,7 @@ exam.sentenceBuildQuestions.forEach((q, i) => {
       examId,
       studentName,
       answers,
+      sentenceBuildAnswers: req.body.sentenceBuildAnswers || [],
 
       autoScore,
       autoMaxScore,
