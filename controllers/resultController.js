@@ -142,8 +142,11 @@ exports.submitExam = async (req, res) => {
     });
 
 // ================= SENTENCE BUILD =================
+// ================= SENTENCE BUILD =================
 exam.sentenceBuildQuestions?.forEach(q => {
-  autoMaxScore += q.points || 3;
+
+  const MAX_POINTS = 3; // ❗ qat’iy 3 ta
+  autoMaxScore += MAX_POINTS;
 
   const user = req.body.sentenceBuildAnswers?.find(
     a => a.questionId === q._id.toString()
@@ -154,7 +157,10 @@ exam.sentenceBuildQuestions?.forEach(q => {
   let score = 0;
 
   const norm = v =>
-    String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
+    String(v || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
 
   if (norm(user.affirmative) === norm(q.affirmative)) score += 1;
   if (norm(user.negative) === norm(q.negative)) score += 1;
