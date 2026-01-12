@@ -128,7 +128,7 @@ exports.updateExam = async (req, res) => {
     // 🔍 DIAGNOSTIKA (SHART)
     console.log("UPDATE QUESTIONS:", questions);
     console.log("UPDATE TRANSLATE:", translateQuestions);
-    console.log("EXAM FROM BACKEND:", exam.sentenceBuildQuestions);
+    console.log("UPDATED SENTENCE BUILD:", updated.sentenceBuildQuestions);
 
     const updated = await Exam.findByIdAndUpdate(
       req.params.id,

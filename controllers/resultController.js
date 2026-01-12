@@ -142,7 +142,6 @@ exports.submitExam = async (req, res) => {
     });
 
 // ================= SENTENCE BUILD =================
-// ================= SENTENCE BUILD =================
 exam.sentenceBuildQuestions?.forEach(q => {
 
   const MAX_POINTS = 3; // ❗ qat’iy 3 ta
