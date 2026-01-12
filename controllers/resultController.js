@@ -87,6 +87,18 @@ exports.submitExam = async (req, res) => {
       });
     }
 
+    function normalize(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "") // . , ! ? olib tashlaydi
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    
+    if (normalize(userAnswer) === normalize(correctAnswer)) {
+      score += question.points;
+    }    
+
     /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
       autoMaxScore += q.points || 1;

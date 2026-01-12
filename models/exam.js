@@ -72,6 +72,14 @@ const ReadingSchema = new mongoose.Schema({
     }
   ],
 
+  translationQuestions: [
+    {
+      sentence: String,
+      correctAnswer: String,
+      points: Number
+    }
+  ],
+
   pointsPerQuestion: {
     type: Number,
     default: 1
