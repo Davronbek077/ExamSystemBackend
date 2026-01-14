@@ -17,6 +17,11 @@ exports.submitExam = async (req, res) => {
       writingText = ""
     } = req.body;
 
+    console.log(
+      "ANSWERS IDS:",
+      answers.map(a => a.questionId)
+    );
+
     if (!studentName) {
       return res.status(400).json({ message: "Ism kiritilmagan" });
     }
