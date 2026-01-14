@@ -86,17 +86,20 @@ exports.submitExam = async (req, res) => {
         }
       });
     }
-
-    function normalize(text) {
-      return text
-        .toLowerCase()
-        .replace(/[^\w\s]/g, "") // . , ! ? olib tashlaydi
-        .replace(/\s+/g, " ")
-        .trim();
-    }
     
-    if (normalize(userAnswer) === normalize(correctAnswer)) {
-      score += question.points;
+    if (exam.reading?.translationQuestions?.length) {
+      exam.reading.translationQuestions.forEach(q => {
+        const pts = q.points || 1;
+        autoMaxScore += pts;
+    
+        const user = answers.find(
+          a => a.questionId === q._id.toString()
+        );
+    
+        if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+          autoScore += pts;
+        }
+      });
     }    
 
     /* ================= BASIC QUESTIONS ================= */
