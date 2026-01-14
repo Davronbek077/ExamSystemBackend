@@ -96,11 +96,19 @@ exports.submitExam = async (req, res) => {
           a => a.questionId === q._id.toString()
         );
     
-        if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        const userAnswer =
+          typeof user?.answer === "string"
+            ? user.answer
+            : user?.answer?.text || "";
+    
+        if (
+          normalize(userAnswer) === normalize(q.correctAnswer)
+        ) {
           autoScore += pts;
         }
       });
-    }    
+    }
+    
 
     /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
