@@ -7,6 +7,8 @@ const normalize = (v) =>
 
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
+
+  const countedQuestions = new Set();
   try {
     const {
       examId,
@@ -89,6 +91,8 @@ exports.submitExam = async (req, res) => {
     
     if (exam.reading?.translationQuestions?.length) {
       exam.reading.translationQuestions.forEach(q => {
+        if (countedQuestions.has(q._id.toString())) return;
+    
         const pts = q.points || 1;
         autoMaxScore += pts;
     
@@ -101,13 +105,13 @@ exports.submitExam = async (req, res) => {
             ? user.answer
             : user?.answer?.text || "";
     
-        if (
-          normalize(userAnswer) === normalize(q.correctAnswer)
-        ) {
+        if (normalize(userAnswer) === normalize(q.correctAnswer)) {
           autoScore += pts;
         }
+    
+        countedQuestions.add(q._id.toString());
       });
-    }
+    }    
     
 
     /* ================= BASIC QUESTIONS ================= */
@@ -157,12 +161,19 @@ exports.submitExam = async (req, res) => {
     });
 
     exam.translateQuestions?.forEach(q => {
-      autoMaxScore += q.points || 1;
+      if (countedQuestions.has(q._id.toString())) return;
+    
+      const pts = q.points || 1;
+      autoMaxScore += pts;
+    
       const user = answers.find(a => a.questionId === q._id.toString());
+    
       if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
-        autoScore += q.points || 1;
+        autoScore += pts;
       }
-    });
+    
+      countedQuestions.add(q._id.toString());
+    });    
 
 // ================= SENTENCE BUILD =================
 exam.sentenceBuildQuestions?.forEach(q => {
