@@ -93,8 +93,7 @@ exports.submitExam = async (req, res) => {
       exam.reading.translationQuestions.forEach(q => {
         if (countedQuestions.has(q._id.toString())) return;
     
-        const pts = q.points || 1;
-        autoMaxScore += pts;
+        autoMaxScore += 1;
     
         const user = answers.find(
           a => a.questionId === q._id.toString()
@@ -106,12 +105,12 @@ exports.submitExam = async (req, res) => {
             : user?.answer?.text || "";
     
         if (normalize(userAnswer) === normalize(q.correctAnswer)) {
-          autoScore += pts;
+          autoScore += 1;
         }
     
         countedQuestions.add(q._id.toString());
       });
-    }    
+    }       
     
 
     /* ================= BASIC QUESTIONS ================= */
