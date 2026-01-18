@@ -7,6 +7,8 @@ const normalize = (v) =>
 
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
+  
+  console.log("SUBMIT BODY:", req.body);
 
   const countedQuestions = new Set();
   try {
@@ -47,7 +49,7 @@ exports.submitExam = async (req, res) => {
       if (matched === keywords.length) return 2; // 100%
       if (matched >= Math.ceil(keywords.length / 2)) return 1; // ≥50%
       return 0;
-    };       
+    };
 
     let autoScore = 0;
     let autoMaxScore = 0;
