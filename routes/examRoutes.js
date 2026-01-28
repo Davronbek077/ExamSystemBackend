@@ -29,6 +29,28 @@ router.delete("/clear", async (req, res) => {
   }
 });
 
+router.get("/levels", async (req, res) => {
+  try {
+    const levels = await Exam.distinct("level");
+    res.json(levels);
+  } catch (err) {
+    res.status(500).json({message: "Level fetch error"});
+  }
+});
+
+// GET EXAMS BY LEVEL
+router.get("/by-level/:level", async (req, res) => {
+  try {
+    const { level } = req.params;
+
+    const exams = await Exam.find({ level }).sort({ createdAt: -1 });
+
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ message: "Exam fetch error" });
+  }
+});
+
 // ROUTES
 router.post("/create", createExam);
 router.get("/all", getAllExams);

@@ -162,7 +162,19 @@ const examSchema = new mongoose.Schema({
   completeQuestions: [completeSchema],
   correctionQuestions: [correctionSchema],
   sentenceBuildQuestions: [sentenceBuildQuestions],
-  writingTask: writingSchema
+  writingTask: writingSchema,
+  level: {
+    type: String,
+    required: true,
+    enum: [
+      "Beginner",
+      "Elementary",
+      "Pre-intermediate",
+      "Pre-IELTS",
+      "IELTS-Foundation",
+      "IELTS-Max"
+    ]
+  }
 
 }, { timestamps: true });
 
