@@ -169,7 +169,11 @@ exports.updateExam = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
-    res.status(500).json({ error: err.message });
+    console.error("UPDATE ERROR FULL:", err);
+    console.error("UPDATE ERROR MESSAGE:", err.message);
+    res.status(500).json({
+      error: err.message,
+      stack: err.stack
+    });
   }
 };
