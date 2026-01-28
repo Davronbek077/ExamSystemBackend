@@ -9,6 +9,7 @@ exports.createExam = async (req, res) => {
   try {
     const {
       title,
+      level,
       timeLimit,
       passPercentage,
       questions = [],
@@ -30,6 +31,7 @@ exports.createExam = async (req, res) => {
 
     const exam = await Exam.create({
       title,
+      level,
       timeLimit,
       passPercentage,
       questions,
@@ -106,6 +108,7 @@ exports.updateExam = async (req, res) => {
   try {
     const {
       title,
+      level,
       timeLimit,
       passPercentage,
 
@@ -134,6 +137,7 @@ exports.updateExam = async (req, res) => {
       {
         $set: {
           title,
+          level,
           timeLimit,
           passPercentage,
 
