@@ -50,6 +50,7 @@ exports.createExam = async (req, res) => {
     res.status(201).json({ success: true, exam });
   } catch (err) {
     console.error("CREATE EXAM ERROR:", err);
+    console.log("CREATE BODY:", req.body);
     res.status(500).json({ error: err.message });
   }
 };
@@ -169,11 +170,7 @@ exports.updateExam = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error("UPDATE ERROR FULL:", err);
-    console.error("UPDATE ERROR MESSAGE:", err.message);
-    res.status(500).json({
-      error: err.message,
-      stack: err.stack
-    });
+    console.error("UPDATE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 };
