@@ -3,7 +3,7 @@ const Result = require("../models/result");
 
 /* ===== HELPER ===== */
 const normalize = (v) =>
-  String(v ?? "").trim().toLowerCase();
+  String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 
 /* ================= SUBMIT EXAM ================= */
 exports.submitExam = async (req, res) => {
