@@ -35,12 +35,14 @@ const tenseTransformSchema = new mongoose.Schema({
 // ===== LISTENING =====
 const listeningTFSchema = new mongoose.Schema({
   statement: String,
-  correct: Boolean
+  correct: Boolean,
+  points: {type: Number, default: 1}
 });
 
 const listeningGapSchema = new mongoose.Schema({
   sentence: String,
-  correctWord: String
+  correctWord: String,
+  points: {type: Number, default: 1}
 });
 
 const ReadingSchema = new mongoose.Schema({
