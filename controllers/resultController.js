@@ -356,6 +356,146 @@ exports.clearExamStats = async (req, res) => {
   }
 };
 
+exports.getSingleResult = async (req, res) => {
+  try {
+    const result = await Result.findById(req.params.id).populate("examId");
+    if (!result) {
+      return res.status(404).json({ message: "Result topilmadi" });
+    }
+
+    const exam = result.examId;
+    const detailedAnswers = [];
+
+    const normalize = v =>
+      String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+    const findAnswer = (id) =>
+      result.answers.find(a => a.questionId.toString() === id.toString());
+
+    /* ===== BASIC QUESTIONS ===== */
+    exam.questions?.forEach(q => {
+      const user = findAnswer(q._id);
+      const isCorrect = user && normalize(user.answer) === normalize(q.correctAnswer);
+
+      detailedAnswers.push({
+        section: "Basic",
+        questionText: q.questionText,
+        correctAnswer: q.correctAnswer,
+        studentAnswer: user?.answer || "",
+        isCorrect,
+        points: isCorrect ? q.points : 0
+      });
+    });
+
+    /* ===== GRAMMAR ===== */
+    exam.grammarQuestions?.forEach(q => {
+      const user = findAnswer(q._id);
+      const isCorrect = user && normalize(user.answer) === normalize(q.correctSentence);
+
+      detailedAnswers.push({
+        section: "Grammar",
+        questionText: q.scrambledWords,
+        correctAnswer: q.correctSentence,
+        studentAnswer: user?.answer || "",
+        isCorrect,
+        points: isCorrect ? q.points : 0
+      });
+    });
+
+    /* ===== TENSE ===== */
+    exam.tenseTransforms?.forEach(t => {
+      t.transforms?.forEach(tr => {
+        const user = findAnswer(tr._id);
+        const isCorrect = user && normalize(user.answer) === normalize(tr.correctSentence);
+
+        detailedAnswers.push({
+          section: "Tense",
+          questionText: `${t.baseSentence} → ${tr.tense}`,
+          correctAnswer: tr.correctSentence,
+          studentAnswer: user?.answer || "",
+          isCorrect,
+          points: isCorrect ? tr.points : 0
+        });
+      });
+    });
+
+    /* ===== LISTENING TF ===== */
+    exam.listeningTF?.forEach(q => {
+      const user = findAnswer(q._id);
+      const correct = q.correct ? "true" : "false";
+      const isCorrect = user && normalize(user.answer) === correct;
+
+      detailedAnswers.push({
+        section: "Listening",
+        questionText: q.statement,
+        correctAnswer: correct,
+        studentAnswer: user?.answer || "",
+        isCorrect,
+        points: isCorrect ? 1 : 0
+      });
+    });
+
+    /* ===== COMPLETE ===== */
+    exam.completeQuestions?.forEach(block => {
+      block.sentences.forEach(sentence => {
+        const user = findAnswer(sentence._id);
+        const isCorrect = user && normalize(user.answer) === normalize(sentence.correctWord);
+
+        detailedAnswers.push({
+          section: "Complete",
+          questionText: sentence.text,
+          correctAnswer: sentence.correctWord,
+          studentAnswer: user?.answer || "",
+          isCorrect,
+          points: isCorrect ? block.pointsPerSentence : 0
+        });
+      });
+    });
+
+    /* ===== CORRECTION ===== */
+    exam.correctionQuestions?.forEach(q => {
+      const user = findAnswer(q._id);
+      const isCorrect = user && normalize(user.answer) === normalize(q.correctSentence);
+
+      detailedAnswers.push({
+        section: "Correction",
+        questionText: q.wrongSentence,
+        correctAnswer: q.correctSentence,
+        studentAnswer: user?.answer || "",
+        isCorrect,
+        points: isCorrect ? q.points : 0
+      });
+    });
+
+    /* ===== TRANSLATE ===== */
+    exam.translateQuestions?.forEach(q => {
+      const user = findAnswer(q._id);
+      const isCorrect = user && normalize(user.answer) === normalize(q.correctAnswer);
+
+      detailedAnswers.push({
+        section: "Translate",
+        questionText: q.word,
+        correctAnswer: q.correctAnswer,
+        studentAnswer: user?.answer || "",
+        isCorrect,
+        points: isCorrect ? q.points : 0
+      });
+    });
+
+    /* ===== FINAL ===== */
+    res.json({
+      studentName: result.studentName,
+      percentage: result.finalPercentage ?? result.autoPercentage,
+      status: result.status,
+      answers: detailedAnswers
+    });
+
+  } catch (err) {
+    console.error("GET SINGLE RESULT ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.checkWriting = async (req, res) => {
   try {
     const {resultId} = req.params;
