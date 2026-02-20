@@ -54,183 +54,269 @@ exports.submitExam = async (req, res) => {
     let autoScore = 0;
     let autoMaxScore = 0;
 
-    /* ================= READING ================= */
-    if (exam.reading?.tfQuestions?.length) {
-      exam.reading.tfQuestions.forEach(q => {
-        autoMaxScore += exam.reading.pointsPerQuestion || 1;
-        const user = answers.find(a => a.questionId === q._id.toString());
-        if (user && normalize(user.answer) === normalize(q.correct)) {
-          autoScore += exam.reading.pointsPerQuestion || 1;
-        }
-      });
+    const levelStats = {};
+
+    function addToLevel(level, earned, total) {
+      if (!level) return;
+
+      if (!levelStats[level]) {
+        levelStats[level] = {
+          earned: 0,
+          total: 0
+        };
+      }
+
+      levelStats[level].earned += earned;
+      levelStats[level].total += total;
     }
 
-    if (exam.reading?.gapQuestions?.length) {
-      exam.reading.gapQuestions.forEach(q => {
-        autoMaxScore += exam.reading.pointsPerQuestion || 1;
-        const user = answers.find(a => a.questionId === q._id.toString());
-        if (user && normalize(user.answer) === normalize(q.correctWord)) {
-          autoScore += exam.reading.pointsPerQuestion || 1;
-        }
-      });
-    }
+    /* ================= READING ================= */
+    exam.reading.tfQuestions.forEach(q => {
+      const pts = exam.reading.pointsPerQuestion || 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+    
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(q.correct)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥
+    });
+
+    exam.reading.gapQuestions?.forEach(q => {
+      const pts = exam.reading.pointsPerQuestion || 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(q.correctWord)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥
+    });
 
     /* ===== READING SHORT ANSWER ===== */
-    if (exam.reading?.shortAnswerQuestions?.length) {
-      exam.reading.shortAnswerQuestions.forEach(q => {
-        const max = q.maxPoints || 2;
-        autoMaxScore += max;
+    exam.reading.shortAnswerQuestions?.forEach(q => {
+      const max = q.maxPoints || 2;
+      autoMaxScore += max;
     
-        const user = answers.find(
-          a => a.questionId === q._id.toString()
-        );
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
     
-        if (user && user.answer) {
-          const score = checkShortAnswer(
-            user.answer,
-            q.keywords || []
-          );
+      if (user && user.answer) {
+        earned = checkShortAnswer(user.answer, q.keywords || []);
+        earned = Math.min(earned, max);
+        autoScore += earned;
+      }
     
-          autoScore += Math.min(score, max);
-        }
-      });
-    }
+      addToLevel(q.level, earned, max); // 🔥
+    });
     
-    if (exam.reading?.translationQuestions?.length) {
-      exam.reading.translationQuestions.forEach(q => {
-        if (countedQuestions.has(q._id.toString())) return;
+    exam.translationQuestions?.forEach(q => {
+      const pts = q.points || 1;
+      autoMaxScore += pts;
     
-        autoMaxScore += 1;
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
     
-        const user = answers.find(
-          a => a.questionId === q._id.toString()
-        );
+      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        earned = pts;
+        autoScore += pts;
+      }
     
-        const userAnswer =
-          typeof user?.answer === "string"
-            ? user.answer
-            : user?.answer?.text || "";
-    
-        if (normalize(userAnswer) === normalize(q.correctAnswer)) {
-          autoScore += 1;
-        }
-    
-        countedQuestions.add(q._id.toString());
-      });
-    }       
+      addToLevel(q.level || "Beginner", earned, pts); // 🔥 addToLevel qo‘shildi
+    });   
     
 
     /* ================= BASIC QUESTIONS ================= */
     exam.questions?.forEach(q => {
-      autoMaxScore += q.points || 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
-        autoScore += q.points || 1;
-      }
-    });
-
-    /* ================= GRAMMAR ================= */
-    exam.grammarQuestions?.forEach(q => {
-      autoMaxScore += q.points || 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
-        autoScore += q.points || 1;
-      }
-    });
-
-    /* ================= TENSE ================= */
-    exam.tenseTransforms?.forEach(t => {
-      t.transforms?.forEach(tr => {
-        autoMaxScore += tr.points || 1;
-        const user = answers.find(a => a.questionId === tr._id.toString());
-        if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
-          autoScore += tr.points || 1;
-        }
-      });
-    });
-
-    /* ================= LISTENING ================= */
-    exam.listeningTF?.forEach(q => {
-      autoMaxScore += 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      const correct = q.correct === true ? "true" : "false";
-      if (user && normalize(user.answer) === correct) {
-        autoScore += 1;
-      }});
-
-    exam.listeningGaps?.forEach(q => {
-      autoMaxScore += 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correctWord)) {
-        autoScore += 1;
-      }
-    });
-
-    exam.translateQuestions?.forEach(q => {
-      if (countedQuestions.has(q._id.toString())) return;
-    
       const pts = q.points || 1;
       autoMaxScore += pts;
     
       const user = answers.find(a => a.questionId === q._id.toString());
     
+      let earned = 0;
+    
       if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        earned = pts;
         autoScore += pts;
       }
     
-      countedQuestions.add(q._id.toString());
-    });    
+      addToLevel(q.level, earned, pts);
+    });
+
+    /* ================= GRAMMAR ================= */
+    exam.grammarQuestions?.forEach(q => {
+      const pts = q.points || 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+    
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥
+    });
+
+    /* ================= TENSE ================= */
+    t.transforms?.forEach(tr => {
+      const pts = tr.points || 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === tr._id.toString());
+    
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(tr.level, earned, pts); // 🔥
+    });
+
+    /* ================= LISTENING ================= */
+    exam.listeningTF?.forEach(q => {
+      const pts = 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
+    
+      const correct = q.correct ? "true" : "false";
+      if (user && normalize(user.answer) === correct) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥
+    });
+
+    exam.listeningGaps?.forEach(q => {
+      const pts = 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(q.correctWord)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥 addToLevel qo‘shildi
+    });
+
+    exam.translateQuestions?.forEach(q => {
+      const pts = q.points || 1;
+      autoMaxScore += pts;
+    
+      const user = answers.find(a => a.questionId === q._id.toString());
+      let earned = 0;
+    
+      if (user && normalize(user.answer) === normalize(q.correctAnswer)) {
+        earned = pts;
+        autoScore += pts;
+      }
+    
+      addToLevel(q.level, earned, pts); // 🔥
+    });   
 
 // ================= SENTENCE BUILD =================
 exam.sentenceBuildQuestions?.forEach(q => {
-
-  const MAX_POINTS = 3; // ❗ qat’iy 3 ta
+  const MAX_POINTS = 3;
   autoMaxScore += MAX_POINTS;
 
   const user = req.body.sentenceBuildAnswers?.find(
     a => a.questionId === q._id.toString()
   );
 
-  if (!user) return;
+  let earned = 0;
 
-  let score = 0;
+  if (user) {
+    const norm = v =>
+      String(v || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
 
-  const norm = v =>
-    String(v || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, " ");
+    if (norm(user.affirmative) === norm(q.affirmative)) earned++;
+    if (norm(user.negative) === norm(q.negative)) earned++;
+    if (norm(user.question) === norm(q.question)) earned++;
 
-  if (norm(user.affirmative) === norm(q.affirmative)) score += 1;
-  if (norm(user.negative) === norm(q.negative)) score += 1;
-  if (norm(user.question) === norm(q.question)) score += 1;
+    autoScore += earned;
+  }
 
-  autoScore += score;
+  addToLevel(q.level, earned, MAX_POINTS); // 🔥
 });
 
-    exam.completeQuestions?.forEach(block => {
-      const pts = block.pointsPerSentence || 1;
+exam.completeQuestions?.forEach(block => {
+  const pts = block.pointsPerSentence || 1;
 
-      block.sentences.forEach(sentence => {
-        autoMaxScore += pts;
+  block.sentences.forEach(sentence => {
+    autoMaxScore += pts;
 
-        const user = answers.find(a => a.questionId === sentence._id.toString());
+    const user = answers.find(a => a.questionId === sentence._id.toString());
+    let earned = 0;
 
-        if (user &&
-          normalize(user.answer) === normalize(sentence.correctWord)
-        ) {
-          autoScore += pts;
-        }
-      });
-    });
+    if (user && normalize(user.answer) === normalize(sentence.correctWord)) {
+      earned = pts;
+      autoScore += pts;
+    }
 
-    exam.correctionQuestions?.forEach(q => {
-      autoMaxScore += q.points || 1;
-      const user = answers.find(a => a.questionId === q._id.toString());
-      if (user && normalize(user.answer) === normalize(q.correctSentence)) {
-        autoScore += q.points || 1;
+    addToLevel(sentence.level, earned, pts); // 🔥
+  });
+});
+
+exam.correctionQuestions?.forEach(q => {
+  const pts = q.points || 1;
+  autoMaxScore += pts;
+
+  const user = answers.find(a => a.questionId === q._id.toString());
+  let earned = 0;
+
+  if (user && normalize(user.answer) === normalize(q.correctSentence)) {
+    earned = pts;
+    autoScore += pts;
+  }
+
+  addToLevel(q.level, earned, pts); // 🔥
+});
+
+    const levelOrder = [
+      "Beginner",
+      "Elementary",
+      "Pre-intermediate",
+      "Pre-IELTS",
+      "IELTS-Foundation",
+      "IELTS-Max"
+    ];
+
+    let studentLevel = "Beginner";
+
+    for (let lvl of levelOrder) {
+      if (!levelStats[lvl]) continue;
+
+      const percent =
+      (levelStats[lvl].earned / levelStats[lvl].total) * 100;
+
+      if (percent >= exam.passPercentage) {
+        studentLevel = lvl;
+      } else {
+        break;
       }
-    });
+    }
 
     /* ================= FINAL AUTO RESULT ================= */
     const autoPercentage =
@@ -253,6 +339,9 @@ exam.sentenceBuildQuestions?.forEach(q => {
       autoScore,
       autoMaxScore,
       autoPercentage,
+
+      studentLevel,
+      levelStats,
 
       writing: {
         text: writingText,

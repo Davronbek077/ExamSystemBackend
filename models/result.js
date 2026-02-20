@@ -47,6 +47,16 @@ const resultSchema = new mongoose.Schema(
       }
     },
 
+    studentLevel: {
+      type: String,
+      default: null
+    },
+
+    levelStats: {
+      type: Object,
+      default: {}
+    },
+
     // FINAL RESULT
     finalScore: {
       type: Number,
