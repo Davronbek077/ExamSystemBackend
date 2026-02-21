@@ -358,6 +358,7 @@ exam.correctionQuestions?.forEach(q => {
       message: "Imtihon topshirildi",
       autoScore,
       autoPercentage,
+      studentLevel,
       writingPending: !!exam.writingTask
     });
 
