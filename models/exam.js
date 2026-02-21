@@ -1,11 +1,21 @@
 const mongoose = require("mongoose");
 
+const LEVELS = [
+  "Beginner",
+  "Elementary",
+  "Pre-intermediate",
+  "Pre-IELTS",
+  "IELTS-Foundation",
+  "IELTS-Max"
+];
+
 // ===== BASIC QUESTION =====
 const questionSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ["mcq", "truefalse", "gapfill"]
   },
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   questionText: String,
   options: [String],
   correctAnswer: String,
@@ -14,6 +24,7 @@ const questionSchema = new mongoose.Schema({
 
 // ===== GRAMMAR =====
 const grammarSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   scrambledWords: String,
   correctSentence: String,
   points: { type: Number, default: 1 }
@@ -21,6 +32,7 @@ const grammarSchema = new mongoose.Schema({
 
 // ===== TENSE =====
 const tenseItemSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   tense: String,
   correctSentence: String,
   points: { type: Number, default: 1 }
@@ -34,12 +46,14 @@ const tenseTransformSchema = new mongoose.Schema({
 
 // ===== LISTENING =====
 const listeningTFSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   statement: String,
   correct: Boolean,
   points: {type: Number, default: 1}
 });
 
 const listeningGapSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   sentence: String,
   correctWord: String,
   points: {type: Number, default: 1}
@@ -51,6 +65,7 @@ const ReadingSchema = new mongoose.Schema({
 
   tfQuestions: [
     {
+      level: { type: String, enum: LEVELS, default: "Beginner" },
       statement: String,
       correct: {
         type: String,
@@ -61,6 +76,7 @@ const ReadingSchema = new mongoose.Schema({
 
   gapQuestions: [
     {
+      level: { type: String, enum: LEVELS, default: "Beginner" },
       sentence: String,
       correctWord: String
     }
@@ -68,6 +84,7 @@ const ReadingSchema = new mongoose.Schema({
 
   shortAnswerQuestions: [   // 🔥 YANGI
     {
+      level: { type: String, enum: LEVELS, default: "Beginner" },
       question: String,
       keywords: [String],
       maxPoints: Number
@@ -76,6 +93,7 @@ const ReadingSchema = new mongoose.Schema({
 
   translationQuestions: [
     {
+      level: { type: String, enum: LEVELS, default: "Beginner" },
       sentence: String,
       correctAnswer: String,
       points: Number
@@ -89,12 +107,14 @@ const ReadingSchema = new mongoose.Schema({
 });
 
 const translateSchema = new mongoose.Schema({
+  level: {type: String, enum: LEVELS, default: "Beginner" },
   word: String,
   correctAnswer: String,
   points: {type: Number, default: 1}
 });
 
 const completeSentenceSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   text: String,
   correctWord: String
 });
@@ -109,6 +129,7 @@ const completeSchema = new mongoose.Schema({
 });
 
 const sentenceBuildQuestions = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   words: {
     type: [String],
     required: true
@@ -132,6 +153,7 @@ const sentenceBuildQuestions = new mongoose.Schema({
 });
 
 const correctionSchema = new mongoose.Schema({
+  level: { type: String, enum: LEVELS, default: "Beginner" },
   wrongSentence: String,
   correctSentence: String,
   points: { type: Number, default: 1 }

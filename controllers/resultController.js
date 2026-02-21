@@ -170,7 +170,7 @@ exports.submitExam = async (req, res) => {
     });
 
     /* ================= TENSE ================= */
-    t.transforms?.forEach(tr => {
+    exam.transforms?.forEach(tr => {
       const pts = tr.points || 1;
       autoMaxScore += pts;
     
