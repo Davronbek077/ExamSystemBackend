@@ -189,7 +189,6 @@ const examSchema = new mongoose.Schema({
   writingTask: writingSchema,
   level: {
     type: String,
-    required: true,
     enum: [
       "Beginner",
       "Elementary",
