@@ -170,21 +170,25 @@ exports.submitExam = async (req, res) => {
     });
 
     /* ================= TENSE ================= */
-    exam.transforms?.forEach(tr => {
-      const pts = tr.points || 1;
-      autoMaxScore += pts;
-    
-      const user = answers.find(a => a.questionId === tr._id.toString());
-    
-      let earned = 0;
-    
-      if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
-        earned = pts;
-        autoScore += pts;
-      }
-    
-      addToLevel(tr.level, earned, pts); // 🔥
-    });
+exam.tenseTransforms?.forEach(t => {
+  t.transforms?.forEach(tr => {
+    const pts = tr.points || 1;
+    autoMaxScore += pts;
+
+    const user = answers.find(
+      a => a.questionId === tr._id.toString()
+    );
+
+    let earned = 0;
+
+    if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
+      earned = pts;
+      autoScore += pts;
+    }
+
+    addToLevel(tr.level, earned, pts);
+  });
+});
 
     /* ================= LISTENING ================= */
     exam.listeningTF?.forEach(q => {
