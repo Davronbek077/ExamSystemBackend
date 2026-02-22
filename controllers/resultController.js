@@ -170,25 +170,27 @@ exports.submitExam = async (req, res) => {
     });
 
     /* ================= TENSE ================= */
-exam.tenseTransforms?.forEach(t => {
-  t.transforms?.forEach(tr => {
-    const pts = tr.points || 1;
-    autoMaxScore += pts;
-
-    const user = answers.find(
-      a => a.questionId === tr._id.toString()
-    );
-
-    let earned = 0;
-
-    if (user && normalize(user.answer) === normalize(tr.correctSentence)) {
-      earned = pts;
-      autoScore += pts;
-    }
-
-    addToLevel(tr.level, earned, pts);
-  });
-});
+    exam.tenseTransforms?.forEach(t => {
+      t.transforms?.forEach(tr => {
+        const pts = tr.points || 1;
+        autoMaxScore += pts;
+    
+        const user = req.body.sentenceBuildAnswers?.find(
+          a => a.questionId === tr._id.toString()
+        );
+    
+        let earned = 0;
+    
+        if (user) {
+          if (normalize(user.affirmative) === normalize(tr.correctAffirmative)) earned++;
+          if (normalize(user.negative) === normalize(tr.correctNegative)) earned++;
+          if (normalize(user.question) === normalize(tr.correctQuestion)) earned++;
+          autoScore += earned;
+        }
+    
+        addToLevel(tr.level, earned, pts);
+      });
+    });
 
     /* ================= LISTENING ================= */
     exam.listeningTF?.forEach(q => {
@@ -501,8 +503,12 @@ exports.getSingleResult = async (req, res) => {
     /* ===== TENSE ===== */
     exam.tenseTransforms?.forEach(t => {
       t.transforms?.forEach(tr => {
-        const user = findAnswer(tr._id);
-        const isCorrect = user && normalize(user.answer) === normalize(tr.correctSentence);
+        const user = result.sentenceBuildAnswers.find(a => a.questionId === tr._id.toString());
+const isCorrect =
+  user &&
+  normalize(user.affirmative) === normalize(tr.correctAffirmative) &&
+  normalize(user.negative) === normalize(tr.correctNegative) &&
+  normalize(user.question) === normalize(tr.correctQuestion);
 
         detailedAnswers.push({
           section: "Tense",
