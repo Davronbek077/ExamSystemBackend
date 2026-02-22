@@ -294,29 +294,31 @@ exam.correctionQuestions?.forEach(q => {
   addToLevel(q.level, earned, pts); // 🔥
 });
 
-    const levelOrder = [
-      "Beginner",
-      "Elementary",
-      "Pre-intermediate",
-      "Pre-IELTS",
-      "IELTS-Foundation",
-      "IELTS-Max"
-    ];
+const levelOrder = [
+  "Beginner",
+  "Elementary",
+  "Pre-intermediate",
+  "Pre-IELTS",
+  "IELTS-Foundation",
+  "IELTS-Max"
+];
 
-    let studentLevel = "Beginner";
+let studentLevel = levelOrder[0];
 
-    for (let lvl of levelOrder) {
-      if (!levelStats[lvl]) continue;
+for (let lvl of levelOrder) {
+  const stats = levelStats[lvl];
 
-      const percent =
-      (levelStats[lvl].earned / levelStats[lvl].total) * 100;
+  if (!stats || stats.total === 0) continue;
 
-      if (percent >= exam.passPercentage) {
-        studentLevel = lvl;
-      } else {
-        break;
-      }
-    }
+  const percent = (stats.earned / stats.total) * 100;
+
+  if (percent < exam.passPercentage) {
+    studentLevel = lvl;
+    break;
+  }
+
+  studentLevel = lvl;
+}
 
     /* ================= FINAL AUTO RESULT ================= */
     const autoPercentage =
