@@ -187,8 +187,6 @@ exports.submitExam = async (req, res) => {
           if (normalize(user.question) === normalize(tr.correctQuestion)) earned++;
           autoScore += earned;
         }
-
-        console.log("Translate Question:", q.word, "Level:", q.level, "Earned:", earned);
     
         addToLevel(tr.level, earned, pts);
       });
