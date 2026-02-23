@@ -395,6 +395,7 @@ exports.getExamStats = async (req, res) => {
       results: results.map(r => ({
         _id: r._id,
         studentName: r.studentName,
+        studentLevel: r.studentLevel,
         percentage: r.finalPercentage ?? r.autoPercentage,
         status: r.status,
         writingChecked: r.writing.checked,
